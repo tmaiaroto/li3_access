@@ -10,6 +10,7 @@ Libraries::add('li3_access');
 
 Add to your bootstrap process the config, for example:
 
+use li3_access\security\Access;
 Access::config(array(
     'rule_based' => array(
         'adapter' => 'Rules',
