@@ -33,8 +33,7 @@ if(!empty($access) {
 }
 
 
-The Access::check() method will always return an array. It will be empty if access is granted and will contain some data if denied.
-This array should contain a "message" key that explains why access was denied as well as a "redirect" key.
+The Access::check() method will always return an array. It will be empty if access is granted and will contain some data if denied. This array should contain a "message" key that explains why access was denied as well as a "redirect" key.
 However, the array can contain any additional data that the adapter may choose to put in it.
 You may also wish to call Access::check() from a different point in your application than the controller.
 
@@ -42,4 +41,4 @@ See the Rules adapter for a simple example of an adapter and more information in
 Note: The above example assumes you're using Lithium's Auth class to obtain user data.
 Also Note: To call methods from the adapter that are not in the Access class, you will need to access it like so:
 
-Access::adapter('rules_based')->add();
+Access::adapter('rule_based')->add();
