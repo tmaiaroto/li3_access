@@ -9,8 +9,8 @@
 
 namespace li3_access\tests\cases\extensions\adapter\security\access;
 
-use \li3_access\security\Access;
-use \lithium\net\http\Request;
+use lithium\net\http\Request;
+use li3_access\security\Access;
 
 class RulesTest extends \lithium\test\Unit {
 
@@ -52,11 +52,11 @@ class RulesTest extends \lithium\test\Unit {
         $this->assertEqual($expected, $result);
 	// and if false instead of an empty array (because one might typically run Auth:check() which could return false)
 	$result = Access::check('test_rulebased', false, $request, array('rules' => $rules));
-        $this->assertEqual($expected, $result);
-	
+	$this->assertEqual($expected, $result);
+
 	// No rules
 	$expected = array('rule' => false, 'message' => 'You are not permitted to access this area.', 'redirect' => '/');
-        $result = Access::check('test_rulebased', array('username' => 'Tom'), $request);
+	$result = Access::check('test_rulebased', array('username' => 'Tom'), $request);
 	$this->assertEqual($expected, $result);
     
 	// Adding a rule "on the fly" by passing a closure, this rule should pass
