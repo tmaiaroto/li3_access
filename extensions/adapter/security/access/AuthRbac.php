@@ -66,8 +66,8 @@ class AuthRbac extends \lithium\core\Object {
 		$roles += $defaultUser;
 
 		foreach ($rules as $rule){
-			var_dump($request->controller);
-			var_dump($rule);
+			//var_dump($request->controller);
+			//var_dump($rule);
 			list($access, $role, $roleName, $controller, $action) = $rule;
 			//sanitize access list items
 			$role = \strtolower($role);
