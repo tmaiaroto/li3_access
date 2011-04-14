@@ -65,17 +65,12 @@ class AuthRbac extends \lithium\core\Object {
 
 		$roles += $defaultUser;
 
+		$accessGranted = false;
 		foreach ($rules as $rule){
-			//var_dump($request->controller);
-			//var_dump($rule);
 			list($access, $role, $roleName, $controller, $action) = $rule;
 			//sanitize access list items
 			$role = \strtolower($role);
 			$controller = \strtolower($controller);
-
-			if ($access != 'allow'){ //currently without deny support
-				continue;
-			}
 			
 			if ($role != 'role'){ //currently without owner support
 				continue;
@@ -86,7 +81,7 @@ class AuthRbac extends \lithium\core\Object {
 				$controller == '*' &&
 				($action == '*' || $action == $request->action)
 			){
-				return true;
+				$accessGranted = ($access === 'allow')?:false;
 			}
 
 			if (
@@ -94,11 +89,11 @@ class AuthRbac extends \lithium\core\Object {
 				$controller == $request->controller &&
 				($action == '*' || $action == $request->action)
 			){
-				return true;
+				$accessGranted = ($access === 'allow')?:false;
 			}
 
 		}
-		return false;
+		return $accessGranted;
 
 	}
 }
