@@ -74,10 +74,11 @@ class AuthRbac extends \lithium\core\Object {
 			$controller = \strtolower($controller);
 			$action = \strtolower($action);
 
-			if ($access == 'deny'){
+			if ($access != 'allow'){ //currently without deny support
 				continue;
 			}
-			if ($role != 'role'){
+			
+			if ($role != 'role'){ //currently without owner support
 				continue;
 			}
 			
