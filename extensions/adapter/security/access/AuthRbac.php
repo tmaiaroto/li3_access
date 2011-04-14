@@ -72,7 +72,6 @@ class AuthRbac extends \lithium\core\Object {
 			//sanitize access list items
 			$role = \strtolower($role);
 			$controller = \strtolower($controller);
-			$action = \strtolower($action);
 
 			if ($access != 'allow'){ //currently without deny support
 				continue;
