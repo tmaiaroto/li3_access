@@ -28,6 +28,7 @@ class AuthRbac extends \lithium\core\Object {
 		if(is_null($this->_roles)){
 			$this->_roles = static::getRolesByAuth($request);
 		}
+		
 		if(!static::checkRules($this->_roles, $request, $this->_config['data'])){
 			//access not granted!
 			return $options;
@@ -46,7 +47,7 @@ class AuthRbac extends \lithium\core\Object {
 	public static function getRolesByAuth($request){
 		$roles = array();
 		foreach (array_keys(Auth::config()) as $key){
-			$roles[$key] =  Auth::check($key); //check against each role
+			$roles[$key] = Auth::check($key,$request); //check against each role
 		}
 		return $roles = \array_filter($roles);
 	}
