@@ -39,32 +39,32 @@ class AccessTest extends \lithium\test\Unit {
     }
 
     public function tearDown() {}
-    
+
     public function testCheck() {
         $request = new Request();
-        
+
         $expected = array();
         $result = Access::check('test_access', array('username' => 'Tom'), $request);
         $this->assertEqual($expected, $result);
-        
+
         $expected = array('message' => 'Access denied.', 'redirect' => '/login');
         $result = Access::check('test_access', false, $request, array('redirect' => '/login', 'message' => 'Access denied.'));
         $this->assertEqual($expected, $result);
     }
-    
+
     public function testFilters() {
         $request = new Request();
-        
+
         $expected = array('message' => 'Access denied.', 'redirect' => '/login');
         $result = Access::check('test_access_with_filters', false, $request, array('redirect' => '/login'));
         $this->assertEqual($expected, $result);
     }
-    
+
     public function testNoConfigurations() {
         Access::reset();
         $this->assertIdentical(array(), Access::config());
-        $this->expectException("Configuration 'test_no_config' has not been defined.");
+        $this->expectException("Configuration `test_no_config` has not been defined.");
         Access::check('test_no_config');
     }
-}    
+}
 ?>
