@@ -3,6 +3,7 @@
 namespace li3_access\extensions\adapter\security\access;
 
 use lithium\security\Auth;
+use lithium\core\ConfigException;
 
 use li3_access\security\Access;
 
@@ -30,7 +31,11 @@ class AuthRbac extends \lithium\core\Object {
 			$this->_roles = static::getRolesByAuth($request);
 		}
 
-		if(!static::checkRules($this->_roles, $request, $this->_config['data'])) {
+        if (empty($this->_config['roles'])) {
+            throw new ConfigException('No roles defined for adapter configuration.');
+        }
+
+		if(!static::checkRules($this->_roles, $request, $this->_config['roles'])) {
 			return $options;
 		}
 
