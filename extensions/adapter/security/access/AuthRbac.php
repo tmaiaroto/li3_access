@@ -9,8 +9,24 @@ use li3_access\security\Access;
 
 class AuthRbac extends \lithium\core\Object {
 
+    /**
+     * @var array $_autoConfig
+     * @see lithium\core\Object::$_autoConfig
+     */
+	protected $_autoConfig = array('redirect', 'message', 'roles');
+
+    /**
+     * @var mixed $_redirect Where to return if Rbac denies access.
+     */
+    protected $_redirect = null;
+
+    /**
+     * @var string $_message A message containing a reason for Rbac failing to deny access.
+     */
+    protected $_message = '';
+
 	/**
-	 * @var array $_roles null if unset array otherwise with fetched AuthObjects
+	 * @var mixed $_roles null if unset array otherwise with fetched AuthObjects
 	 */
 	protected $_roles = null;
 
@@ -27,15 +43,12 @@ class AuthRbac extends \lithium\core\Object {
 	 * @return Array An empty array if access is allowed and an array with reasons for denial if denied.
 	 */
 	public function check($user, $request, array $options = array()) {
-		if(is_null($this->_roles)){
-			$this->_roles = static::getRolesByAuth($request);
-		}
-
-        if (empty($this->_config['roles'])) {
+        if (empty($this->_roles)) {
             throw new ConfigException('No roles defined for adapter configuration.');
         }
 
-        // Return configured options or role specific configured options if failed.
+        foreach ($this->_roles as $role) {
+        }
 
 		return array();
 	}
