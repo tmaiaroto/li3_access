@@ -48,6 +48,8 @@ class AuthRbac extends \lithium\core\Object {
             throw new ConfigException('No roles defined for adapter configuration.');
         }
 
+        $message = null;
+        $redirect = null;
         $authedRoles = static::getRolesByAuth($request);
 
         foreach ($this->_roles as $type => $role) {
@@ -63,16 +65,9 @@ class AuthRbac extends \lithium\core\Object {
             foreach ($auths as $auth) {
                 if (array_key_exists($auth, $authedRoles)) {
 			        if ($controller === '*' && ($action === '*' || $action === $request->params['action'])) {
+                        $accessGranted = false;
                         if ($type === 'allow') {
                             $accessGranted = true;
-                        } else {
-                            $accessGranted = false;
-                            if (isset($message)) {
-                                $this->_message = $message;
-                            }
-                            if (isset($redirect)) {
-                                $this->_redirect = $redirect;
-                            }
                         }
                         break;
 			        }
@@ -81,14 +76,6 @@ class AuthRbac extends \lithium\core\Object {
                         $accessGranted = false;
                         if ($type === 'allow') {
                             $accessGranted = true;
-                        } else {
-                            $accessGranted = false;
-                            if (isset($message)) {
-                                $this->_message = $message;
-                            }
-                            if (isset($redirect)) {
-                                $this->_redirect = $redirect;
-                            }
                         }
                         break;
 			        }
@@ -97,6 +84,9 @@ class AuthRbac extends \lithium\core\Object {
         }
 
         if (!$accessGranted) {
+            $this->_message = $message ?: $this->_message;
+            $this->_redirect = $redirect ?: $this->_redirect;
+
             return array(
                 'message' => $this->_message,
                 'redirect' => $this->_redirect
