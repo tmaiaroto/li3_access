@@ -32,7 +32,8 @@ class AuthRbac extends \lithium\core\Object {
 
 	/**
 	 * The `Rbac` adapter will iterate trough the rbac data Array.
-	 * @todo: implement file based data access
+	 * @todo: Implement file based data access
+	 * @todo: Shorter $match syntax
 	 *
 	 * @param mixed $user The user data array that holds all necessary information about
 	 *        the user requesting access. Or false (because Auth::check() can return false).
@@ -47,9 +48,62 @@ class AuthRbac extends \lithium\core\Object {
             throw new ConfigException('No roles defined for adapter configuration.');
         }
 
-        foreach ($this->_roles as $role) {
+        $authedRoles = static::getRolesByAuth($request);
+
+        foreach ($this->_roles as $type => $role) {
+            $types = array('allow', 'deny');
+            if (!in_array($type, $types)) {
+                continue;
+            }
+
+            extract($role);
+            extract($match);
+
+            $controller = strtolower($controller);
+
+            $auths = (array) $auths;
+            foreach ($auths as $auth) {
+                if (array_key_exists($auth, $authedRoles)) {
+			        if ($controller === '*' && ($action === '*' || $action === $request->params['action'])) {
+                        if ($type === 'allow') {
+                            $accessGranted = true;
+                        } else {
+                            $accessGranted = false;
+                            if (isset($message)) {
+                                $this->_message = $message;
+                            }
+                            if (isset($redirect)) {
+                                $this->_redirect = $redirect;
+                            }
+                        }
+                        break;
+			        }
+
+                    if ($controller == $request->params['controller'] && ($action == '*' || $action == $request->params['action'])) {
+                        $accessGranted = false;
+                        if ($type === 'allow') {
+                            $accessGranted = true;
+                        } else {
+                            $accessGranted = false;
+                            if (isset($message)) {
+                                $this->_message = $message;
+                            }
+                            if (isset($redirect)) {
+                                $this->_redirect = $redirect;
+                            }
+                        }
+                        break;
+			        }
+                }
+            }
         }
 
+        if (!$accessGranted) {
+            return array(
+                'message' => $this->_message,
+                'redirect' => $this->_redirect
+            );
+        }
 		return array();
 	}
 
@@ -64,7 +118,7 @@ class AuthRbac extends \lithium\core\Object {
 		foreach (array_keys(Auth::config()) as $key){
 			$roles[$key] = Auth::check($key, $request); //check against each role
 		}
-		return $roles = \array_filter($roles);
+		return $roles = array_filter($roles);
 	}
 
 }
