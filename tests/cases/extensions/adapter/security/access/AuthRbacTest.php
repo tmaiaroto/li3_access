@@ -40,13 +40,13 @@ class AuthRbacTest extends \lithium\test\Unit {
                         'message' => 'Access denied.',
                         'redirect' => '/',
                         'auths' => '*',
-                        'match' => '*'
+                        'match' => array('controller' => '*', 'action' => '*')
                     ),
                     'allow' => array(
                         'message' => 'Access granted.',
                         'redirect' => '/',
                         'auths' => '*',
-                        'match' => 'Tests::granted'
+                        'match' => array('controller' => 'Tests', 'action' => 'granted')
                     )
                 )
             )
@@ -63,7 +63,7 @@ class AuthRbacTest extends \lithium\test\Unit {
         $result = Access::check('test_simple_check', $this->_user, $request);
         $this->assertIdentical($expected, $result);
 
-        $request = $request->params = array('controller' => 'Tests', 'action' => 'granted');
+        $request->params = array('controller' => 'Tests', 'action' => 'granted');
         $expected = array();
         $result = Access::check('test_simple_check', $this->_user, $request);
         $this->assertIdentical($expected, $result);
@@ -75,6 +75,8 @@ class AuthRbacTest extends \lithium\test\Unit {
         $request = new Request();
 
         $config = Access::config('test_no_roles_configured');
+        $request->params = array('controller' => 'Tests', 'action' => 'granted');
+
         $this->assertTrue(empty($config['roles']));
         $this->expectException('No roles defined for adapter configuration.');
         Access::check('test_no_roles_configured', $this->_guest, $request);;
