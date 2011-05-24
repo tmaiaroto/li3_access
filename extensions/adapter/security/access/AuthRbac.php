@@ -59,8 +59,6 @@ class AuthRbac extends \lithium\core\Object {
             extract($role);
             extract($match);
 
-            $controller = strtolower($controller);
-
             $auths = (array) $auths;
             foreach ($auths as $auth) {
                 if (array_key_exists($auth, $authedRoles)) {
