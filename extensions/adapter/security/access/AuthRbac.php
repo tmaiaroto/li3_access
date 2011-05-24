@@ -35,9 +35,7 @@ class AuthRbac extends \lithium\core\Object {
             throw new ConfigException('No roles defined for adapter configuration.');
         }
 
-		if(!static::checkRules($this->_roles, $request, $this->_config['roles'])) {
-			return $options;
-		}
+        // Return configured options or role specific configured options if failed.
 
 		return array();
 	}
@@ -54,51 +52,6 @@ class AuthRbac extends \lithium\core\Object {
 			$roles[$key] = Auth::check($key, $request); //check against each role
 		}
 		return $roles = \array_filter($roles);
-	}
-
-	/**
-	 * Checks Request against the configured Auth data array. If the request matches the rule
-	 * it will return true => if no rule matches it will return false.
-	 *
-	 * @param array $roles
-	 * @param Request $request
-	 * @param array $rules
-	 * @return boolean $granted
-	 */
-	public static function checkRules($roles, $request, array $rules = array()){
-		$defaultUser = array('*' => '*');
-
-		$roles += $defaultUser;
-
-		$accessGranted = false;
-		foreach ($rules as $rule) {
-			list($access, $role, $roleName, $controller, $action) = $rule;
-			//sanitize access list items
-			$role = \strtolower($role);
-			$controller = \strtolower($controller);
-
-			if ($role != 'role') { //currently without owner support
-				continue;
-			}
-
-			if (
-				\array_key_exists($roleName, $roles) && //role matches
-				$controller == '*' &&
-				($action == '*' || $action == $request->action)
-			) {
-				$accessGranted = ($access === 'allow') ?: false;
-			}
-
-			if (
-				\array_key_exists($roleName, $roles) && //role matches
-				$controller == $request->controller &&
-				($action == '*' || $action == $request->action)
-			){
-				$accessGranted = ($access === 'allow') ?: false;
-			}
-
-		}
-		return (boolean) $accessGranted;
 	}
 
 }
