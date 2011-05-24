@@ -35,17 +35,17 @@ class AuthRbacTest extends \lithium\test\Unit {
             ),
             'test_simple_check' => array(
                 'adapter' => 'AuthRbac',
+                'message' => 'Generic access denied message.',
+                'redirect' => '',
                 'roles' => array(
                     'deny' => array(
-                        'message' => 'Access denied.',
+                        'message' => 'Rule access denied message.',
                         'redirect' => '/',
                         'auths' => '*',
                         'match' => array('controller' => '*', 'action' => '*')
                     ),
                     'allow' => array(
-                        'message' => 'Access granted.',
-                        'redirect' => '/',
-                        'auths' => '*',
+                        'auths' => 'user',
                         'match' => array('controller' => 'Tests', 'action' => 'granted')
                     )
                 )
@@ -55,15 +55,19 @@ class AuthRbacTest extends \lithium\test\Unit {
 
     public function tearDown() {}
 
-    public function testSimpleCheck() {
+    public function testCheck() {
         $request = new Request();
 
         $request->params = array('controller' => 'Tests', 'action' => 'denied');
-        $expected = array('message' => 'Access denied.', 'redirect' => '/');
+        $expected = array('message' => 'Rule access denied message.', 'redirect' => '/');
         $result = Access::check('test_simple_check', $this->_user, $request);
         $this->assertIdentical($expected, $result);
 
         $request->params = array('controller' => 'Tests', 'action' => 'granted');
+        $expected = array('message' => 'Generic access denied message.', 'redirect' => '/');
+        $result = Access::check('test_simple_check', $this->_guest, $request);
+        $this->assertIdentical($expected, $result);
+
         $expected = array();
         $result = Access::check('test_simple_check', $this->_user, $request);
         $this->assertIdentical($expected, $result);
