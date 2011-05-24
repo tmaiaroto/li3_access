@@ -18,7 +18,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 
     protected $_guest = null;
 
-    protected $user = array(
+    protected $_user = array(
         'user' => null
     );
 
@@ -40,13 +40,13 @@ class AuthRbacTest extends \lithium\test\Unit {
                         'message' => 'Access denied.',
                         'redirect' => '/',
                         'auths' => '*',
-                        'params' => '*'
+                        'match' => '*'
                     ),
                     'allow' => array(
                         'message' => 'Access granted.',
                         'redirect' => '/',
                         'auths' => '*',
-                        'params' => 'user'
+                        'match' => 'Tests::granted'
                     )
                 )
             )
@@ -55,9 +55,21 @@ class AuthRbacTest extends \lithium\test\Unit {
 
     public function tearDown() {}
 
-    public function testCheck() {
+    public function testSimpleCheck() {
         $request = new Request();
+
+        $request->params = array('controller' => 'Tests', 'action' => 'denied');
+        $expected = array('message' => 'Access denied.', 'redirect' => '/');
+        $result = Access::check('test_simple_check', $this->_user, $request);
+        $this->assertIdentical($expected, $result);
+
+        $request = $request->params = array('controller' => 'Tests', 'action' => 'granted');
+        $expected = array();
+        $result = Access::check('test_simple_check', $this->_user, $request);
+        $this->assertIdentical($expected, $result);
     }
+
+    public function testGetRolesByAuth() {}
 
     public function testNoRolesConfigured() {
         $request = new Request();
@@ -65,7 +77,7 @@ class AuthRbacTest extends \lithium\test\Unit {
         $config = Access::config('test_no_roles_configured');
         $this->assertTrue(empty($config['roles']));
         $this->expectException('No roles defined for adapter configuration.');
-        Access::check('test_no_roles_configured', array('user' => null), $request);
+        Access::check('test_no_roles_configured', $this->_guest, $request);;
     }
 
 }
