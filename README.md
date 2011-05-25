@@ -7,13 +7,13 @@ Checkout the code to either of your library directories:
     cd libraries
     git clone git@github.com
 
-Include the library in in your `/[app|app/libraries/library_name}]config/bootstrap/libraries.php`
+Include the library in in your `/app/config/bootstrap/libraries.php`
 
     Libraries::add('li3_access');
 
 ##Usage
 
-Usage is simple enough. You must configure the adapter you wish to use first, but once you have it configured it's fairly simple.
+Getting it to work. You must configure the adapter you wish to use first, but once you have it configured it's fairly simple.
 
     $access = Access::check('access_config_name', Auth::check('auth_config_name'), $this->request);
     if(!empty($access)) {
