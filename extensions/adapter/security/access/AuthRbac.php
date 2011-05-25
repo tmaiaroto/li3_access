@@ -48,25 +48,31 @@ class AuthRbac extends \lithium\core\Object {
             throw new ConfigException('No roles defined for adapter configuration.');
         }
 
-        $message = $redirect = null;
+        $message = $this->_message;
+        $redirect = $this->_redirect;
         $authedRoles = static::getRolesByAuth($request, array('checkSession' => false, 'success' => true));
 
-        foreach ($this->_roles as $type => $role) {
-            $diff = array_diff((array) $role['requesters'], array_keys($authedRoles));
-            if (count($diff) === count($authedRoles)) {
+        $accessGranted = false;
+        foreach ($this->_roles as $role) {
+            // if the role does not apply to the current request "continue;""
+            if (empty($role['match']) || !$match = static::parseMatch($role['match'], $request)) {
+                continue;
+            }
+            $accessGranted = $match;
+
+            // if the user does not have access to this role set accessGranted false
+            // if the $allow is set to deny set accessGranted to false
+            $requesters = isset($role['requesters']) ? $role['requesters'] : '*';
+            $allow = isset($role['allow']) ? (boolean) $role['allow'] : true;
+
+            $diff = array_diff((array) $requesters, array_keys($authedRoles));
+            if ((count($diff) === count($authedRoles)) || !$allow) {
                 $accessGranted = false;
-            } elseif (empty($role['match'])) {
-                $accessGranted = false;
-            } else {
-                $accessGranted = static::parseMatch($role['match'], $request);
-                if ($type === 'deny') {
-                    $accessGranted = false;
-                }
             }
 
             if (!$accessGranted) {
-                $message = isset($role['message']) ? $role['message'] : $this->_message;
-                $redirect = isset($role['redirect']) ? $role['redirect'] : $this->_redirect;
+                $message = !empty($role['message']) ? $role['message'] : $this->_message;
+                $redirect = !empty($role['redirect']) ? $role['redirect'] : $this->_redirect;
             }
         }
 
