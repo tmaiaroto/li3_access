@@ -117,8 +117,8 @@ A rule used to match (see: `AuthRbac::parseMatch()`) this role against the reque
 *Examples*:
 
 * `'Dashboards::index'` -> `array('controller' => 'Dashboards', 'action' => 'index')`
-* `'Dashboards::\*'` -> `array('controller' => 'Dashboards', 'action' => '\*')` -> `Any action in the Dasboards controller.`
-* `array('library' => 'admin_plugin', '\*::\*');` -> `array('library' => 'admin_plugin', 'controller' => '\*', 'action' => '\*')` -> `Any controller/action combination under the admin_panel library.`
+* `'Dashboards::*'` -> `array('controller' => 'Dashboards', 'action' => '*')` -> `Any action in the Dasboards controller.`
+* `array('library' => 'admin_plugin', '*::*');` -> `array('library' => 'admin_plugin', 'controller' => '*', 'action' => '*')` -> `Any controller/action combination under the admin_panel library.`
 
 **requester**
 
