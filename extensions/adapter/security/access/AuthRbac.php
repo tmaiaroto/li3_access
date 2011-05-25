@@ -78,6 +78,47 @@ class AuthRbac extends \lithium\core\Object {
 		return $roles = array_filter($roles);
 	}
 
+    /**
+     * parseMatch Matches the current request parameters against a set of given parameters.
+     * Can match against a shorthand string (Controller::action) or a full array. If a parameter
+     * is provided then it must have an equivilent in the Request objects parmeters in order
+     * to validate. * Is also acceptable to match a parameter without a specific value.
+     *
+     * @param mixed $match A set of parameters to validate the request against.
+     * @param mixed $request A lithium Request object.
+     * @access public
+     * @return boolean True if a match is found.
+     */
+    public function parseMatch($match, $request) {
+        if (empty($match)) {
+            return false;
+        }
+
+        $result = array();
+        foreach ((array) $match as $key => $param) {
+            if (preg_match('/^[A-Za-z0-9_\*]+::[A-Za-z0-9_\*]+$/', $param, $regexMatches)) {
+                list($controller, $action) = explode('::', reset($regexMatches));
+                $result += compact('controller', 'action');
+                continue;
+            }
+            $result[$key] = $param;
+        }
+
+        $allowAccess = true;
+        foreach ($result as $param => $value) {
+            if ($value === '*') {
+                continue;
+            }
+
+            if (!array_key_exists($param, $request->params) || $value !== $request->params[$param]) {
+                $allowAccess = false;
+                break;
+            }
+        }
+
+        return $allowAccess;
+    }
+
 }
 
 ?>
