@@ -20,7 +20,7 @@ You must configure the adapter you wish to use first, but once you have it confi
         $this->redirect($access['redirect']);
     }
 
-If the request validates correctly based on your configuration then `check()` will return an empty `array()` otherwise it will return and array with two keys; `message` and `redirect`. These values are built into the Access class but you can override them but passing them as `$options` to the `Simple` and `Rules` adapters and defining them in the config in the case of the `AuthRbac` adapter.
+If the request validates correctly based on your configuration then `Access::check()` will return an empty `array()` otherwise it will return and array with two keys; `message` and `redirect`. These values are built into the Access class but you can override them but passing them as `$options` to the `Simple` and `Rules` adapters and defining them in the config in the case of the `AuthRbac` adapter.
 
 ##Configuration
 
@@ -28,7 +28,7 @@ In this repository there are three adapters. All three work in a slightly differ
 
 ###Simple Adapter
 
-The simple adapter is exactly what it says it is. It's so simple, in fact, that there aren't any tests for it. The simple adapter only checks that the data passed to is not empty and as a result its' configuration is just as easy.
+The simple adapter is exactly what it says it is. The check method only checks that the data passed to is not empty and as a result the configuration is trivial.
 
     Access::config(
         'simple' => array('adapter' => 'Simple')
@@ -38,7 +38,7 @@ And that's it!
 
 ###Rules Adapter
 
-This adapter effectively allows you to tell it how it should work. It containes a set of simple access rules by default but it's very simple to add your own. It's configuration is the same as the `Simple` adapter if you only want to use the built in methods.
+This adapter effectively allows you to tell it how it should work. It containes a few access rules by default but it's very simple to add your own. It's configuration is the same as the `Simple` adapter if you only want to use the built in methods.
 
     Access::config(
         'rules' => array('adapter' => 'Rules')
