@@ -52,17 +52,7 @@ class AuthRbacTest extends \lithium\test\Unit {
     }
 
     public function testCheck() {
-        $request = new Request();
-
-        $request->params = array('controller' => 'Tests', 'action' => 'denied');
-
-        $guest = Auth::check('user', array());
-        $success = true;
-        $user = Auth::check('user', array('user' => array('id' => 1)), compact('success'));
-
-        /*$expected = array('message' => 'Generic access denied message.', 'redirect' => '/');
-        $result = Access::check('test_simple_check', $user, $request);
-        $this->assertIdentical($expected, $result);
+        $request = new Request(array('params' => array('library' => 'test_library', 'controller' => 'TestControllers', 'action' => 'test_action')));
 
         /*$request->params = array('controller' => 'Tests', 'action' => 'granted');
         $expected = array('message' => 'Rule access denied message.', 'redirect' => '/');
@@ -87,21 +77,21 @@ class AuthRbacTest extends \lithium\test\Unit {
     }
 
     public function testParseMatch() {
-        $request = new Request(array('library' => 'test_library', 'controller' => 'test_controller', 'action' => 'test_action'));
+        $request = new Request(array('params' => array('library' => 'test_library', 'controller' => 'TestControllers', 'action' => 'test_action')));
 
-        $match = array('library' => 'test_library', 'controller' => 'test_controller', 'action' => 'test_action');
+        $match = array('library' => 'test_library', 'controller' => 'TestControllers', 'action' => 'test_action');
         $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
 
-        $match = array('controller' => 'test_controller', 'action' => 'test_action');
+        $match = array('controller' => 'TestControllers', 'action' => 'test_action');
         $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
 
         $match = array('library' => 'test_library', 'action' => 'test_action');
         $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
 
-        $match = array('library' => 'test_library', 'controller' => 'test_controller');
+        $match = array('library' => 'test_library', 'controller' => 'TestControllers');
         $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
 
-        $match = array('library' => 'test_no_match', 'controller' => 'test_controller', 'action' => 'test_action');
+        $match = array('library' => 'test_no_match', 'controller' => 'TestControllers', 'action' => 'test_action');
         $this->assertFalse(Access::adapter('test_simple_check')->parseMatch($match, $request));
 
         $match = 'TestControllers::test_action';
