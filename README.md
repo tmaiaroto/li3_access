@@ -149,11 +149,11 @@ Assuming we have an Auth configuration like so:
     	)
     ));
 
-Setting 'requester' => array('user', 'customer') would only apply the rule to anyone that could authenticat as a user or customer. Setting 'requester' => '*' would mean that all of these auth configurations and people that are not authenticated would have this role applied to them.
+Setting 'requester' => array('user', 'customer') would only apply the rule to anyone that could authenticate as a user or customer. Setting 'requester' => '*' would mean that all of these auth configurations and people that are not authenticated would have this role applied to them.
 
 **message**
 
-Sets the message that will be used **if the `match` paramter is relevant to the request** and **if the user is denied access as a result**. Just like the roles themselves these cascade from top to bottom.
+Sets the message that will be used **if the `match` parameter is relevant to the request** and **if the user is denied access as a result**. Just like the roles themselves these cascade from top to bottom.
 
 **redirect**
 
@@ -161,23 +161,23 @@ Same behavior as message.
 
 **allow**
 
-Forces a role that would have been granted access to deny access. This way you can apply a rule to everyone and then proceed to exclude requesters manualy.
+A boolean that forces a role that would have been granted access to deny access. This way you can apply a rule to everyone and then proceed to exclude requesters manualy.
 
 ###Filters
 
 The Access::check() method is filterable. You can apply the filters in the configuration like so:
 
-Access::config(array(
-    'rule_based' => array(
-        'adapter' => 'Rules',
-        'filters' => array(
-            function($self, $params, $chain) {
-                // Filter logic goes here
-                return $chain->next($self, $params, $chain);
-            }
+    Access::config(array(
+        'rule_based' => array(
+            'adapter' => 'Rules',
+            'filters' => array(
+                function($self, $params, $chain) {
+                    // Filter logic goes here
+                    return $chain->next($self, $params, $chain);
+                }
+            )
         )
-    )
-));
+    ));
 
 ##Example configurations
 
