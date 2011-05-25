@@ -43,15 +43,22 @@ class AuthRbacTest extends \lithium\test\Unit {
                 'message' => 'Generic access denied message.',
                 'redirect' => '/',
                 'roles' => array(
-                    'deny' => array(
+                    array(
+                        'allow' => false,
                         'requesters' => '*',
                         'match' => '*::*'
                     ),
-                    'allow' => array(
+                    array(
                         'message' => 'Rule access denied message.',
                         'redirect' => '/',
-                        'requestsers' => 'user',
+                        'requesters' => 'user',
                         'match' => 'TestControllers::test_action'
+                    ),
+                    array(
+                        'message' => 'Test no overwrite.',
+                        'redirect' => '/test_no_overwrite',
+                        'requesters' => 'user',
+                        'match' => null
                     )
                 )
             )
@@ -76,6 +83,35 @@ class AuthRbacTest extends \lithium\test\Unit {
         $request->data = $user;
         $expected = array();
         $result = Access::check('test_check', $user, $request, array('checkSession' => false, 'success' => true));
+        $this->assertIdentical($expected, $result);
+    }
+
+    public function testCheckMessageOverride() {
+        $request = new Request(array('params' => array('library' => 'test_library', 'controller' => 'TestControllers', 'action' => 'test_action')));
+
+        $guest = array();
+        $user = array('username' => 'test');
+
+        $request->data = $guest;
+        $expected = array('message' => 'Rule access denied message.', 'redirect' => '/');
+        $result = Access::check('test_message_override', $guest, $request, array('checkSession' => false));
+        $this->assertIdentical($expected, $result);
+
+        $request->data = $user;
+        $expected = array();
+        $result = Access::check('test_message_override', $user, $request, array('checkSession' => false));
+        $this->assertIdentical($expected, $result);
+
+        $request->params = array('controller' => 'TestControllers', 'action' => 'test_deinied_action');
+
+        $request->data = $guest;
+        $expected = array('message' => 'Generic access denied message.', 'redirect' => '/');
+        $result = Access::check('test_message_override', $guest, $request, array('checkSession' => false));
+        $this->assertIdentical($expected, $result);
+
+        $request->data = $user;
+        $expected = array('message' => 'Generic access denied message.', 'redirect' => '/');
+        $result = Access::check('test_message_override', $user, $request, array('checkSession' => false));
         $this->assertIdentical($expected, $result);
     }
 
@@ -125,6 +161,9 @@ class AuthRbacTest extends \lithium\test\Unit {
         $this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
 
         $match = array('library' => 'test_no_match', '*::*');
+        $this->assertFalse(Access::adapter('test_check')->parseMatch($match, $request));
+
+        $match = null;
         $this->assertFalse(Access::adapter('test_check')->parseMatch($match, $request));
     }
 
