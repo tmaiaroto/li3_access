@@ -75,7 +75,7 @@ class AuthRbacTest extends \lithium\test\Unit {
     }
 
     public function testGetRolesByAuth() {
-        $request = new Request(array('params' => array('controller' => 'Tests', 'action' => 'test')));
+        $request = new Request();
         $request->data = array('username' => 'richard');
 
         $result = Access::adapter('test_simple_check')->getRolesByAuth($request, array('checkSession' => false));
@@ -86,6 +86,43 @@ class AuthRbacTest extends \lithium\test\Unit {
         $this->assertIdentical($expected, $result);
     }
 
+    public function testParseMatch() {
+        $request = new Request(array('library' => 'test_library', 'controller' => 'test_controller', 'action' => 'test_action'));
+
+        $match = array('library' => 'test_library', 'controller' => 'test_controller', 'action' => 'test_action');
+        $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
+
+        $match = array('controller' => 'test_controller', 'action' => 'test_action');
+        $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
+
+        $match = array('library' => 'test_library', 'action' => 'test_action');
+        $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
+
+        $match = array('library' => 'test_library', 'controller' => 'test_controller');
+        $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
+
+        $match = array('library' => 'test_no_match', 'controller' => 'test_controller', 'action' => 'test_action');
+        $this->assertFalse(Access::adapter('test_simple_check')->parseMatch($match, $request));
+
+        $match = 'TestControllers::test_action';
+        $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
+
+        $match = 'TestControllers::*';
+        $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
+
+        $match = '*::test_action';
+        $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
+
+        $match = '*::*';
+        $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
+
+        $match = array('library' => 'test_library', '*::*');
+        $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
+
+        $match = array('library' => 'test_no_match', '*::*');
+        $this->assertFalse(Access::adapter('test_simple_check')->parseMatch($match, $request));
+    }
+
     public function testNoRolesConfigured() {
         $request = new Request();
 
@@ -94,7 +131,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 
         $this->assertTrue(empty($config['roles']));
         $this->expectException('No roles defined for adapter configuration.');
-        Access::check('test_no_roles_configured', array('guest' => null), $request);;
+        Access::check('test_no_roles_configured', array('guest' => null), $request);
     }
 
 }
