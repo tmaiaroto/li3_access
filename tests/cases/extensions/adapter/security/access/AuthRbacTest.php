@@ -27,20 +27,31 @@ class AuthRbacTest extends \lithium\test\Unit {
             'test_no_roles_configured' => array(
                 'adapter' => 'AuthRbac'
             ),
-            'test_simple_check' => array(
+            'test_check' => array(
                 'adapter' => 'AuthRbac',
                 'message' => 'Generic access denied message.',
-                'redirect' => '',
+                'redirect' => '/',
+                'roles' => array(
+                    'allow' => array(
+                        'requesters' => 'user',
+                        'match' => '*::*'
+                    )
+                )
+            ),
+            'test_message_override' => array(
+                'adapter' => 'AuthRbac',
+                'message' => 'Generic access denied message.',
+                'redirect' => '/',
                 'roles' => array(
                     'deny' => array(
-                        'auths' => '*',
-                        'match' => array('controller' => '*', 'action' => '*')
+                        'requesters' => '*',
+                        'match' => '*::*'
                     ),
                     'allow' => array(
                         'message' => 'Rule access denied message.',
                         'redirect' => '/',
-                        'auths' => 'user',
-                        'match' => array('controller' => 'Tests', 'action' => 'granted')
+                        'requestsers' => 'user',
+                        'match' => 'TestControllers::test_action'
                     )
                 )
             )
@@ -53,26 +64,17 @@ class AuthRbacTest extends \lithium\test\Unit {
 
     public function testCheck() {
         $request = new Request(array('params' => array('library' => 'test_library', 'controller' => 'TestControllers', 'action' => 'test_action')));
-
-        /*$request->params = array('controller' => 'Tests', 'action' => 'granted');
-        $expected = array('message' => 'Rule access denied message.', 'redirect' => '/');
-        $result = Access::check('test_simple_check', $guest, $request);
-        $this->assertIdentical($expected, $result);
-
-        $expected = array();
-        $result = Access::check('test_simple_check', $user, $request);
-        $this->assertIdentical($expected, $result);*/
     }
 
     public function testGetRolesByAuth() {
         $request = new Request();
         $request->data = array('username' => 'richard');
 
-        $result = Access::adapter('test_simple_check')->getRolesByAuth($request, array('checkSession' => false));
+        $result = Access::adapter('test_check')->getRolesByAuth($request, array('checkSession' => false));
         $this->assertIdentical(array('*' => '*'), $result);
 
         $expected = array('*' => '*', 'user' => array('username' => 'richard'));
-        $result = Access::adapter('test_simple_check')->getRolesByAuth($request, array('checkSession' => false, 'success' => true));
+        $result = Access::adapter('test_check')->getRolesByAuth($request, array('checkSession' => false, 'success' => true));
         $this->assertIdentical($expected, $result);
     }
 
@@ -80,37 +82,37 @@ class AuthRbacTest extends \lithium\test\Unit {
         $request = new Request(array('params' => array('library' => 'test_library', 'controller' => 'TestControllers', 'action' => 'test_action')));
 
         $match = array('library' => 'test_library', 'controller' => 'TestControllers', 'action' => 'test_action');
-        $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
+        $this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
 
         $match = array('controller' => 'TestControllers', 'action' => 'test_action');
-        $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
+        $this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
 
         $match = array('library' => 'test_library', 'action' => 'test_action');
-        $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
+        $this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
 
         $match = array('library' => 'test_library', 'controller' => 'TestControllers');
-        $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
+        $this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
 
         $match = array('library' => 'test_no_match', 'controller' => 'TestControllers', 'action' => 'test_action');
-        $this->assertFalse(Access::adapter('test_simple_check')->parseMatch($match, $request));
+        $this->assertFalse(Access::adapter('test_check')->parseMatch($match, $request));
 
         $match = 'TestControllers::test_action';
-        $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
+        $this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
 
         $match = 'TestControllers::*';
-        $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
+        $this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
 
         $match = '*::test_action';
-        $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
+        $this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
 
         $match = '*::*';
-        $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
+        $this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
 
         $match = array('library' => 'test_library', '*::*');
-        $this->assertTrue(Access::adapter('test_simple_check')->parseMatch($match, $request));
+        $this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
 
         $match = array('library' => 'test_no_match', '*::*');
-        $this->assertFalse(Access::adapter('test_simple_check')->parseMatch($match, $request));
+        $this->assertFalse(Access::adapter('test_check')->parseMatch($match, $request));
     }
 
     public function testNoRolesConfigured() {
