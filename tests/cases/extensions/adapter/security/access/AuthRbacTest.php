@@ -19,7 +19,7 @@ class AuthRbacTest extends \lithium\test\Unit {
     public function setUp() {
         Auth::config(array(
             'user' => array(
-                'adapter' => '\lithium\tests\mocks\security\auth\adapter\MockAuthAdapter'
+                'adapter' => '\li3_access\tests\mocks\extensions\adapter\auth\MockAuthAdapter'
             )
         ));
 
@@ -47,7 +47,9 @@ class AuthRbacTest extends \lithium\test\Unit {
         ));
     }
 
-    public function tearDown() {}
+    public function tearDown() {
+        Auth::clear('user');
+    }
 
     public function testCheck() {
         $request = new Request();
@@ -58,7 +60,7 @@ class AuthRbacTest extends \lithium\test\Unit {
         $success = true;
         $user = Auth::check('user', array('user' => array('id' => 1)), compact('success'));
 
-        $expected = array('message' => 'Generic access denied message.', 'redirect' => '/');
+        /*$expected = array('message' => 'Generic access denied message.', 'redirect' => '/');
         $result = Access::check('test_simple_check', $user, $request);
         $this->assertIdentical($expected, $result);
 
@@ -72,7 +74,17 @@ class AuthRbacTest extends \lithium\test\Unit {
         $this->assertIdentical($expected, $result);*/
     }
 
-    public function testGetRolesByAuth() {}
+    public function testGetRolesByAuth() {
+        $request = new Request(array('params' => array('controller' => 'Tests', 'action' => 'test')));
+        $request->data = array('username' => 'richard');
+
+        $result = Access::adapter('test_simple_check')->getRolesByAuth($request, array('checkSession' => false));
+        $this->assertIdentical(array('*' => '*'), $result);
+
+        $expected = array('*' => '*', 'user' => array('username' => 'richard'));
+        $result = Access::adapter('test_simple_check')->getRolesByAuth($request, array('checkSession' => false, 'success' => true));
+        $this->assertIdentical($expected, $result);
+    }
 
     public function testNoRolesConfigured() {
         $request = new Request();
