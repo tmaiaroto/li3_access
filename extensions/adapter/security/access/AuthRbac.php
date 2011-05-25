@@ -48,45 +48,12 @@ class AuthRbac extends \lithium\core\Object {
             throw new ConfigException('No roles defined for adapter configuration.');
         }
 
-        $message = null;
-        $redirect = null;
         $authedRoles = static::getRolesByAuth($request);
 
         foreach ($this->_roles as $type => $role) {
-            $types = array('allow', 'deny');
-            if (!in_array($type, $types)) {
-                continue;
-            }
-
-            extract($role);
-            extract($match);
-
-            $auths = (array) $auths;
-            foreach ($auths as $auth) {
-                if (array_key_exists($auth, $authedRoles)) {
-			        if ($controller === '*' && ($action === '*' || $action === $request->params['action'])) {
-                        $accessGranted = false;
-                        if ($type === 'allow') {
-                            $accessGranted = true;
-                        }
-                        break;
-			        }
-
-                    if ($controller == $request->params['controller'] && ($action == '*' || $action == $request->params['action'])) {
-                        $accessGranted = false;
-                        if ($type === 'allow') {
-                            $accessGranted = true;
-                        }
-                        break;
-			        }
-                }
-            }
         }
 
         if (!$accessGranted) {
-            $this->_message = $message ?: $this->_message;
-            $this->_redirect = $redirect ?: $this->_redirect;
-
             return array(
                 'message' => $this->_message,
                 'redirect' => $this->_redirect
@@ -101,10 +68,12 @@ class AuthRbac extends \lithium\core\Object {
 	 * @param Request $request Object
 	 * @return array|mixed $roles Roles with attachted User Models
 	 */
-	public static function getRolesByAuth($request){
+	public static function getRolesByAuth($request, array $options = array()){
 		$roles = array('*' => '*');
 		foreach (array_keys(Auth::config()) as $key){
-			$roles[$key] = Auth::check($key, $request); //check against each role
+            if ($check = Auth::check($key, $request, $options)) {
+			    $roles[$key] = $check;
+            }
 		}
 		return $roles = array_filter($roles);
 	}
