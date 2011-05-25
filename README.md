@@ -108,7 +108,7 @@ Then we set the default `message` and `redirect` options. If we don't specify it
 
 Next is the roles array. This array is required if you want to use this adapter. The roles are evaluated from top to bottom. So if a role at the bottom contradicts one closer to the top, the bottom will take precedence.
 
-There are five possible options you can specify for a single role.
+####There are five possible options you can specify for a single role.
 
 **match**
 
