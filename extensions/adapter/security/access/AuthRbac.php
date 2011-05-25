@@ -40,7 +40,7 @@ class AuthRbac extends \lithium\core\Object {
 	 *        This is an optional parameter, bercause we will fetch the users data trough Auth
 	 *        seperately.
 	 * @param object $request The Lithium Request object.
-	 * @param array $options An array of additional options.
+	 * @param array $options An array of additional options for the getRolesByAuth method.
 	 * @return Array An empty array if access is allowed and an array with reasons for denial if denied.
 	 */
 	public function check($user, $request, array $options = array()) {
@@ -48,18 +48,29 @@ class AuthRbac extends \lithium\core\Object {
             throw new ConfigException('No roles defined for adapter configuration.');
         }
 
-        $authedRoles = static::getRolesByAuth($request);
+        $message = $redirect = null;
+        $authedRoles = static::getRolesByAuth($request, array('checkSession' => false, 'success' => true));
 
         foreach ($this->_roles as $type => $role) {
+            $diff = array_diff((array) $role['requesters'], array_keys($authedRoles));
+            if (count($diff) === count($authedRoles)) {
+                $accessGranted = false;
+            } elseif (empty($role['match'])) {
+                $accessGranted = false;
+            } else {
+                $accessGranted = static::parseMatch($role['match'], $request);
+                if ($type === 'deny') {
+                    $accessGranted = false;
+                }
+            }
+
+            if (!$accessGranted) {
+                $message = isset($role['message']) ? $role['message'] : $this->_message;
+                $redirect = isset($role['redirect']) ? $role['redirect'] : $this->_redirect;
+            }
         }
 
-        if (!$accessGranted) {
-            return array(
-                'message' => $this->_message,
-                'redirect' => $this->_redirect
-            );
-        }
-		return array();
+        return !$accessGranted ? compact('message', 'redirect') : array();
 	}
 
 	/**
@@ -89,7 +100,7 @@ class AuthRbac extends \lithium\core\Object {
      * @access public
      * @return boolean True if a match is found.
      */
-    public function parseMatch($match, $request) {
+    public static function parseMatch($match, $request) {
         if (empty($match)) {
             return false;
         }
