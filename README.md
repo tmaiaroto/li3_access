@@ -65,7 +65,7 @@ One more to go!
 
 ###AuthRbac Adapter
 
-This is the most complex adapter in this repository at this time. It's used for finely-tuned Role Based Access Control. It doesn't access a database like some RBAC implementations so you can't manage it through a pretty interface you designed, but it does help to cut down on access control code being dotted all arround your application in some cases.
+This is the most complex adapter in this repository at this time. It's used for Role Based Access Control. You define a set of roles (or conditions) to match the request against, if the request matches your conditions and the user 
 
     Access::config(
         'auth_rbac' => array(
@@ -79,7 +79,7 @@ This is the most complex adapter in this repository at this time. It's used for 
                     'match' => '*::*'
                 ),
                 array(
-                    'message' => 'No you cannot access the admin panel! Who do you think you are?',
+                    'message' => 'No panel for you!',
                     'redirect' => 'Users::login',
                     'requesters' => 'admin',
                     'match' => array('library' => 'admin_panel', '*::*')
@@ -103,7 +103,7 @@ There are five possible options you can specify for a single role.
 
 **`match`**
 
-A rule used to "match" this role against the request passed to the Access::check() method. You may use a parameters array where you explicitly set the parameter/value pairs or you may use a shorthand syntax very similar to the one you may use when generating urls. Without match being set the role will always deny access.
+A rule used to "match" (see: `AuthRbac::parseMatch()`) this role against the request object bassed to the `check()` method. You may use a parameters array where you explicitly set the parameter/value pairs or you may use a shorthand syntax very similar to the one you may use when generating urls. Without match being set the role will always deny access.
 
 *Examples*:
 
