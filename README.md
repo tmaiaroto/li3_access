@@ -65,7 +65,9 @@ One more to go!
 
 ###AuthRbac Adapter
 
-This is the most complex adapter in this repository at this time. It's used for Role Based Access Control. You define a set of roles (or conditions) to match the request against, if the request matches your conditions and the user 
+This is the most complex adapter in this repository at this time. It's used for Role Based Access Control. You define a set of roles (or conditions) to match the request against, if the request matches your conditions the adapter then checks to see if the user is authenticated with the appropriate `\lithium\security\Auth` configurations to be granted access.
+
+It's difficult to explain (I hope that's clear enough) so lets look at an example configuration to try and achive some clarity:
 
     Access::config(
         'auth_rbac' => array(
@@ -74,25 +76,32 @@ This is the most complex adapter in this repository at this time. It's used for 
             'redirect' => 'Dashboards::index',
             'roles' => array(
                 array(
-                    'allow' => false,
                     'requesters' => '*',
                     'match' => '*::*'
                 ),
                 array(
                     'message' => 'No panel for you!',
-                    'redirect' => 'Users::login',
+                    'redirect' => array('library' => 'admin', 'Users::login'),
                     'requesters' => 'admin',
-                    'match' => array('library' => 'admin_panel', '*::*')
+                    'match' => array('library' => 'admin', '*::*')
+                ),
+                array(
+                    'requesters' => '*',
+                    'match' => array('library' => 'admin', 'Users::login')
+                ),
+                array(
+                    'requesters' => '*',
+                    'match' => array('library' => 'admin', 'Users::logout')
                 )
             )
         )
     )
 
-Lets take it apart peice by piece. First we tell it which adapter to use:
+First we tell it which adapter to use:
 
     'adapter' => 'AuthRbac',
 
-Then we set the default `message` and `redirect` options. If we don't specify it will fall back to the values set in \security\Access::check().
+Then we set the default `message` and `redirect` options. If we don't specify it will fall back to the values set in \security\Access::check(). *This behavior will change in the next itteration of the adapter. See TODO.*
 
     'message' => 'Access denied.',
     'redirect' => 'Dashboards::index',
@@ -101,21 +110,21 @@ Next is the roles array. This array is required if you want to use this adapter.
 
 There are five possible options you can specify for a single role.
 
-**`match`**
+**match**
 
-A rule used to "match" (see: `AuthRbac::parseMatch()`) this role against the request object bassed to the `check()` method. You may use a parameters array where you explicitly set the parameter/value pairs or you may use a shorthand syntax very similar to the one you may use when generating urls. Without match being set the role will always deny access.
+A rule used to match (see: `AuthRbac::parseMatch()`) this role against the request object passed from the `check()` method. You may use a parameters array where you explicitly set the parameter/value pairs or you can also use a shorthand syntax very similar to the one you use when generating urls. Without match being set the role will always deny access.
 
 *Examples*:
 
 * 'Dashboards::index' -> array('controller' => 'Dashboards', 'action' => 'index')
-* 'Dashboards::*' -> array('controller' => 'Dashboards', 'action' => '*') -> Any action in the Dasboards controller.
-* array('library' => 'admin_plugin', '*::*'); -> array('library' => 'admin_plugin', 'controller' => '*', 'action' => '*') -> Any controller/action combination under the admin_panel library.
+* 'Dashboards::\*' -> array('controller' => 'Dashboards', 'action' => '\*') -> Any action in the Dasboards controller.
+* array('library' => 'admin_plugin', '\*::\*'); -> array('library' => 'admin_plugin', 'controller' => '\*', 'action' => '\*') -> Any controller/action combination under the admin_panel library.
 
-**`requester`**
+**requester**
 
-A string or an array of auth configuration keys that this rule applies to. A '*' denotes everyone, even those who are not logged in. A string of 'admin' will apply this to everyone who can be authenticated against the user defined 'admin' Auth configuration. An as the string array is the same but, you can apply it to multiple Auth configurations.
+A string or an array of auth configuration keys that this rule applies to. A `'*'` denotes everyone, even those who are not authenticated. A string of `'admin'` will apply this to everyone who can be authenticated against the user defined `'admin'` Auth configuration. An array of configuration keys does the same but you can apply it to multiple Auth configurations in one go.
 
-`Example`:
+*Example*:
 
 Assuming we have an Auth configuration like so:
 
@@ -140,23 +149,23 @@ Assuming we have an Auth configuration like so:
     	)
     ));
 
-Setting 'requester' => array('user', 'customer') would only apply the rule to anyone that could authenticat as a user or customer. Setting 'requester' => '*' would mean that all of these users and people that are not authenticated would have this role applied to them.
+Setting 'requester' => array('user', 'customer') would only apply the rule to anyone that could authenticat as a user or customer. Setting 'requester' => '*' would mean that all of these auth configurations and people that are not authenticated would have this role applied to them.
 
-**`message`**
+**message**
 
-Sets the message that will be used **if the `match` paramter is relevant to the request** and **if the user is denied access as a result**. Just like the roles themselves these override each other from top to bottom.
+Sets the message that will be used **if the `match` paramter is relevant to the request** and **if the user is denied access as a result**. Just like the roles themselves these cascade from top to bottom.
 
-**`redirect`**
+**redirect**
 
 Same behavior as message.
 
-**`allow`**
+**allow**
 
 Forces a role that would have been granted access to deny access. This way you can apply a rule to everyone and then proceed to exclude requesters manualy.
 
 ###Filters
 
-The Access::check() method is filterable and can be confiured like so:
+The Access::check() method is filterable. You can apply the filters in the configuration like so:
 
 Access::config(array(
     'rule_based' => array(
