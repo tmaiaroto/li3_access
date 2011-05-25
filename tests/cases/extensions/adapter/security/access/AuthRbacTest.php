@@ -64,16 +64,29 @@ class AuthRbacTest extends \lithium\test\Unit {
 
     public function testCheck() {
         $request = new Request(array('params' => array('library' => 'test_library', 'controller' => 'TestControllers', 'action' => 'test_action')));
+
+        $guest = array();
+        $user = array('username' => 'test');
+
+        $request->data = $guest;
+        $expected = array('message' => 'Generic access denied message.', 'redirect' => '/');
+        $result = Access::check('test_check', $guest, $request, array('checkSession' => false));
+        $this->assertIdentical($expected, $result);
+
+        $request->data = $user;
+        $expected = array();
+        $result = Access::check('test_check', $user, $request, array('checkSession' => false, 'success' => true));
+        $this->assertIdentical($expected, $result);
     }
 
     public function testGetRolesByAuth() {
         $request = new Request();
-        $request->data = array('username' => 'richard');
+        $request->data = array('username' => 'test');
 
         $result = Access::adapter('test_check')->getRolesByAuth($request, array('checkSession' => false));
         $this->assertIdentical(array('*' => '*'), $result);
 
-        $expected = array('*' => '*', 'user' => array('username' => 'richard'));
+        $expected = array('*' => '*', 'user' => array('username' => 'test'));
         $result = Access::adapter('test_check')->getRolesByAuth($request, array('checkSession' => false, 'success' => true));
         $this->assertIdentical($expected, $result);
     }
