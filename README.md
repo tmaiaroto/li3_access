@@ -13,14 +13,14 @@ Include the library in in your `/app/config/bootstrap/libraries.php`
 
 ##Usage
 
-Getting it to work. You must configure the adapter you wish to use first, but once you have it configured it's fairly simple.
+You must configure the adapter you wish to use first, but once you have it configured it's fairly simple to use.
 
     $access = Access::check('access_config_name', Auth::check('auth_config_name'), $this->request);
     if(!empty($access)) {
         $this->redirect($access['redirect']);
     }
 
-If the request validates correctly based on your configuration then check() will return an empty array() otherwise it will return and array with two keys; `message` and `redirect`. These values are built into the Access class but you can override them but passing them as `$options` to the `Simple` and `Rules` adapters and defining them in the config in the case of the `AuthRbac` adapter.
+If the request validates correctly based on your configuration then `check()` will return an empty `array()` otherwise it will return and array with two keys; `message` and `redirect`. These values are built into the Access class but you can override them but passing them as `$options` to the `Simple` and `Rules` adapters and defining them in the config in the case of the `AuthRbac` adapter.
 
 ##Configuration
 
