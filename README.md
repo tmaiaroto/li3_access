@@ -7,24 +7,24 @@ Checkout the code to either of your library directories:
     cd libraries
     git clone git@github.com
 
-Include the library in in your /{*app*|*app/libraries/library_name*}/config/bootstrap/libraries.php
+Include the library in in your `/[app|app/libraries/library_name}]config/bootstrap/libraries.php`
 
     Libraries::add('li3_access');
 
 ##Usage
 
-Usage is simple enough, you must configure the adapter you wish to use first. But once you have it configured it's faily simple.
+Usage is simple enough. You must configure the adapter you wish to use first, but once you have it configured it's fairly simple.
 
     $access = Access::check('access_config_name', Auth::check('auth_config_name'), $this->request);
     if(!empty($access)) {
         $this->redirect($access['redirect']);
     }
 
-If the data request validates correctly based on your configuration then check() will return an empty array() otherwise it will return and array with two keys; `message` and `redirect`. These values are built into the Access class but you can override them but passing them as `$options` to the `Simple` and `Rules` adapters and defining them in the config in the case of the `AuthRbac` adapter.
+If the request validates correctly based on your configuration then check() will return an empty array() otherwise it will return and array with two keys; `message` and `redirect`. These values are built into the Access class but you can override them but passing them as `$options` to the `Simple` and `Rules` adapters and defining them in the config in the case of the `AuthRbac` adapter.
 
 ##Configuration
 
-In this repository there are three adapters. And all three work in a slightly different way.
+In this repository there are three adapters. All three work in a slightly different way.
 
 ###Simple Adapter
 
