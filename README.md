@@ -1,4 +1,4 @@
-#Access control library for the Lithium framework for PHP 5.3.
+#Access control library for the Lithium framework.
 
 ##Installation
 
