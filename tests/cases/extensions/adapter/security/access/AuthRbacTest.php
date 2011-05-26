@@ -184,11 +184,11 @@ class AuthRbacTest extends \lithium\test\Unit {
 
         $match = true;
         $test = function() { return true; };
-        $this->assertTrue(Access::adapter('test_match_closure')->parseMatch($test, $request));
+        $this->assertTrue(Access::adapter('test_match_closure')->parseMatch(array($test), $request));
 
         $match = false;
         $test = function() { return false; };
-        $this->assertFalse(Access::adapter('test_match_closure')->parseMatch($test, $request));
+        $this->assertFalse(Access::adapter('test_match_closure')->parseMatch(array($test), $request));
     }
 
     public function testMatchClosure() {

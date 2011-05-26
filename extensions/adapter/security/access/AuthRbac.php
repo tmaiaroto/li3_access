@@ -102,16 +102,14 @@ class AuthRbac extends \lithium\core\Object {
             return false;
         }
 
+        if (is_array($match)) {
+            if (!static::_parseClosures($match, $request)) {
+                return false;
+            }
+        }
+
         $params = array();
         foreach ((array) $match as $key => $param) {
-            if (is_callable($param)) {
-                $call = (boolean) $param($request);
-                if (!$call) {
-                    return false;
-                }
-                continue;
-            }
-
             if (is_string($param)) {
                 if (preg_match('/^[A-Za-z0-9_\*]+::[A-Za-z0-9_\*]+$/', $param, $regexMatches)) {
                     list($controller, $action) = explode('::', reset($regexMatches));
@@ -138,6 +136,22 @@ class AuthRbac extends \lithium\core\Object {
         }
 
         return true;
+    }
+
+    protected static function _parseClosures(array &$data = array(), $request = null) {
+        if (empty($data)) {
+            return false;
+        }
+
+        $return = true;
+        foreach ($data as $key => $item) {
+            if (is_callable($item)) {
+                $return = $item($request);
+                unset($data[$key]);
+            }
+        }
+
+        return $return;
     }
 
 }
