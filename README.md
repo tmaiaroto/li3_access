@@ -9,7 +9,9 @@ Checkout the code to either of your library directories:
 
 Include the library in in your `/app/config/bootstrap/libraries.php`
 
-    Libraries::add('li3_access');
+```php
+Libraries::add('li3_access');
+```
 
 ##Usage
 
@@ -67,7 +69,7 @@ One more to go!
 
 This is the most complex adapter in this repository at this time. It's used for Role Based Access Control. You define a set of roles (or conditions) to match the request against, if the request matches your conditions the adapter then checks to see if the user is authenticated with the appropriate `\lithium\security\Auth` configurations to be granted access.
 
-It's difficult to explain (I hope that's clear enough) so lets look at an example configuration to try and achive some clarity: 
+It's difficult to explain (I hope that's clear enough) so lets look at an example configuration to try and achive some clarity:
 
     Access::config(
         'auth_rbac' => array(
