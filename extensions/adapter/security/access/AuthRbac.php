@@ -45,7 +45,7 @@ class AuthRbac extends \lithium\core\Object {
 
         $accessGranted = false;
         foreach ($this->_roles as $role) {
-            // if the role does not apply to the current request "continue;""
+            // if the role does not apply to the current request "continue;"
             if (empty($role['match']) || !$match = static::parseMatch($role['match'], $request)) {
                 continue;
             }
@@ -102,33 +102,42 @@ class AuthRbac extends \lithium\core\Object {
             return false;
         }
 
-        $result = array();
+        $params = array();
         foreach ((array) $match as $key => $param) {
-            if (preg_match('/^[A-Za-z0-9_\*]+::[A-Za-z0-9_\*]+$/', $param, $regexMatches)) {
-                list($controller, $action) = explode('::', reset($regexMatches));
-                $result += compact('controller', 'action');
+            if (is_callable($param)) {
+                $call = (boolean) $param($request);
+                if (!$call) {
+                    return false;
+                }
                 continue;
             }
-            $result[$key] = $param;
+
+            if (is_string($param)) {
+                if (preg_match('/^[A-Za-z0-9_\*]+::[A-Za-z0-9_\*]+$/', $param, $regexMatches)) {
+                    list($controller, $action) = explode('::', reset($regexMatches));
+                    $params += compact('controller', 'action');
+                    continue;
+                }
+            }
+
+            $params[$key] = $param;
         }
 
-        $allowAccess = true;
-        foreach ($result as $param => $value) {
+        foreach ($params as $type => $value) {
             if ($value === '*') {
                 continue;
             }
 
-            if ($param === 'controller' && $value !== '*') {
+            if ($type === 'controller') {
                 $value = \lithium\util\Inflector::underscore($value);
             }
 
-            if (!array_key_exists($param, $request->params) || $value !== $request->params[$param]) {
-                $allowAccess = false;
-                break;
+            if (!array_key_exists($type, $request->params) || $value !== $request->params[$type]) {
+                return false;
             }
         }
 
-        return $allowAccess;
+        return true;
     }
 
 }
