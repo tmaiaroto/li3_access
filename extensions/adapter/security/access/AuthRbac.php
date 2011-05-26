@@ -41,23 +41,23 @@ class AuthRbac extends \lithium\core\Object {
         $message = $options['message'];
         $redirect = $options['redirect'];
         unset($options['message'], $options['redirect']);
-        $authedRoles = static::getRolesByAuth($request, $options);
 
         $accessGranted = false;
+        $authedRoles = static::getRolesByAuth($request, $options);
         foreach ($this->_roles as $role) {
-            // if the role does not apply to the current request "continue;"
             if (empty($role['match']) || !$match = static::parseMatch($role['match'], $request)) {
                 continue;
             }
             $accessGranted = $match;
 
-            // if the user does not have access to this role set accessGranted false
-            // if the $allow is set to deny set accessGranted to false
             $requesters = isset($role['requesters']) ? $role['requesters'] : '*';
             $allow = isset($role['allow']) ? (boolean) $role['allow'] : true;
-
             $diff = array_diff((array) $requesters, array_keys($authedRoles));
-            if ((count($diff) === count($authedRoles)) || !$allow) {
+
+            if ((!$allow) ||
+                (count($diff) === count($authedRoles)) ||
+                (!empty($role['rules']) && !static::_parseClosures($role['rules'], $request))
+            ) {
                 $accessGranted = false;
             }
 
@@ -139,10 +139,6 @@ class AuthRbac extends \lithium\core\Object {
     }
 
     protected static function _parseClosures(array &$data = array(), $request = null) {
-        if (empty($data)) {
-            return false;
-        }
-
         $return = true;
         foreach ($data as $key => $item) {
             if (is_callable($item)) {

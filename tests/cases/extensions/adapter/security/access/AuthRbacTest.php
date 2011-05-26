@@ -41,6 +41,9 @@ class AuthRbacTest extends \lithium\test\Unit {
                 'roles' => array(
                     array(
                         'requesters' => 'user',
+                        'rules' => array(function($request) {
+                            return $request->params['success'] ? true : false;
+                        }),
                         'match' => array(
                             function($request) {
                                 return $request->params['success'] ? true : false;
@@ -189,6 +192,9 @@ class AuthRbacTest extends \lithium\test\Unit {
         $match = false;
         $test = function() { return false; };
         $this->assertFalse(Access::adapter('test_match_closure')->parseMatch(array($test), $request));
+
+        $match = false;
+        $this->assertFalse(Access::adapter('test_match_closure')->parseMatch(array(), $request));
     }
 
     public function testMatchClosure() {
