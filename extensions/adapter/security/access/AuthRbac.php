@@ -30,7 +30,7 @@ class AuthRbac extends \lithium\core\Object {
 	 *        This is an optional parameter, bercause we will fetch the users data trough Auth
 	 *        seperately.
 	 * @param object $request The Lithium Request object.
-	 * @param array $options An array of additional options for the getRolesByAuth method.
+	 * @param array $options An array of additional options for the _getRolesByAuth method.
 	 * @return Array An empty array if access is allowed and an array with reasons for denial if denied.
 	 */
 	public function check($user, $request, array $options = array()) {
@@ -43,7 +43,7 @@ class AuthRbac extends \lithium\core\Object {
         unset($options['message'], $options['redirect']);
 
         $accessGranted = false;
-        $authedRoles = static::getRolesByAuth($request, $options);
+        $authedRoles = static::_getRolesByAuth($request, $options);
         foreach ($this->_roles as $role) {
             if (empty($role['match']) || !$match = static::parseMatch($role['match'], $request)) {
                 continue;
@@ -68,22 +68,6 @@ class AuthRbac extends \lithium\core\Object {
         }
 
         return !$accessGranted ? compact('message', 'redirect') : array();
-	}
-
-	/**
-	 * @todo reduce Model Overhead (will duplicated in each model)
-	 *
-	 * @param Request $request Object
-	 * @return array|mixed $roles Roles with attachted User Models
-	 */
-	public static function getRolesByAuth($request, array $options = array()){
-		$roles = array('*' => '*');
-		foreach (array_keys(Auth::config()) as $key){
-            if ($check = Auth::check($key, $request, $options)) {
-			    $roles[$key] = $check;
-            }
-		}
-		return $roles = array_filter($roles);
 	}
 
     /**
@@ -149,6 +133,22 @@ class AuthRbac extends \lithium\core\Object {
 
         return $return;
     }
+
+	/**
+	 * @todo reduce Model Overhead (will duplicated in each model)
+	 *
+	 * @param Request $request Object
+	 * @return array|mixed $roles Roles with attachted User Models
+	 */
+	protected static function _getRolesByAuth($request, array $options = array()){
+		$roles = array('*' => '*');
+		foreach (array_keys(Auth::config()) as $key){
+            if ($check = Auth::check($key, $request, $options)) {
+			    $roles[$key] = $check;
+            }
+		}
+		return $roles = array_filter($roles);
+	}
 
 }
 

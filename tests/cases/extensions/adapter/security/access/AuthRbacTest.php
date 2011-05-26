@@ -134,18 +134,6 @@ class AuthRbacTest extends \lithium\test\Unit {
         $this->assertIdentical($expected, $result);
     }
 
-    public function testGetRolesByAuth() {
-        $request = new Request();
-        $request->data = array('username' => 'test');
-
-        $result = Access::adapter('test_check')->getRolesByAuth($request, array('checkSession' => false));
-        $this->assertIdentical(array('*' => '*'), $result);
-
-        $expected = array('*' => '*', 'user' => array('username' => 'test'));
-        $result = Access::adapter('test_check')->getRolesByAuth($request, array('checkSession' => false, 'success' => true));
-        $this->assertIdentical($expected, $result);
-    }
-
     public function testParseMatch() {
         $request = new Request(array('params' => array('library' => 'test_library', 'controller' => 'test_controllers', 'action' => 'test_action')));
 
