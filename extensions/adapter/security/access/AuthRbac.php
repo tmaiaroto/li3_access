@@ -144,7 +144,6 @@ class AuthRbac extends \lithium\core\Object {
                 unset($data[$key]);
             }
         }
-
         return $return;
     }
 
