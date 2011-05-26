@@ -23,7 +23,6 @@ class AccessTest extends \lithium\test\Unit {
                 'adapter' => 'Simple',
                 'filters' => array(
                     function($self, $params, $chain) {
-                        // Do something, maybe log something, then continue on.
                         return $chain->next($self, $params, $chain);
                     },
                     function($self, $params, $chain) {
@@ -61,10 +60,12 @@ class AccessTest extends \lithium\test\Unit {
     }
 
     public function testNoConfigurations() {
+        $request = new Request();
+
         Access::reset();
         $this->assertIdentical(array(), Access::config());
         $this->expectException("Configuration `test_no_config` has not been defined.");
-        Access::check('test_no_config');
+        Access::check('test_no_config', false, $request);
     }
 }
 ?>
