@@ -170,7 +170,7 @@ The Access::check() method is filterable. You can apply the filters in the confi
 
 ###Tom Maiaroto
 
-The original author if this library.
+The original author of this library.
 
 Github: [tmaiaroto](https://github.com/tmaiaroto/li3_access)
 
