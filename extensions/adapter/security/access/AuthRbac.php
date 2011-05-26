@@ -122,11 +122,25 @@ class AuthRbac extends \lithium\core\Object {
         return true;
     }
 
+    /**
+     * _parseClosures Itterates over an array and runs any anonymous functions it
+     * finds. Returns true if all of the closures it runs evaluate to true. $match
+     * is passed by refference and any closures found are removed from it before the
+     * method is complete.
+     *
+     * @param array $data
+     * @param mixed $request
+     * @static
+     * @access protected
+     * @return void
+     */
     protected static function _parseClosures(array &$data = array(), $request = null) {
         $return = true;
         foreach ($data as $key => $item) {
             if (is_callable($item)) {
-                $return = $item($request);
+                if ($return === true) {
+                    $return = (boolean) $item($request);
+                }
                 unset($data[$key]);
             }
         }
