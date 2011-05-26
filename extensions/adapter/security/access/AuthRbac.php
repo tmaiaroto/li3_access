@@ -118,6 +118,10 @@ class AuthRbac extends \lithium\core\Object {
                 continue;
             }
 
+            if ($param === 'controller' && $value !== '*') {
+                $value = \lithium\util\Inflector::underscore($value);
+            }
+
             if (!array_key_exists($param, $request->params) || $value !== $request->params[$param]) {
                 $allowAccess = false;
                 break;

@@ -9,9 +9,7 @@ Checkout the code to either of your library directories:
 
 Include the library in in your `/app/config/bootstrap/libraries.php`
 
-```php
-Libraries::add('li3_access');
-```
+    Libraries::add('li3_access');
 
 ##Usage
 

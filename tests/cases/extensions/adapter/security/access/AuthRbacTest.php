@@ -66,7 +66,7 @@ class AuthRbacTest extends \lithium\test\Unit {
     }
 
     public function testCheck() {
-        $request = new Request(array('params' => array('library' => 'test_library', 'controller' => 'TestControllers', 'action' => 'test_action')));
+        $request = new Request(array('params' => array('library' => 'test_library', 'controller' => 'test_controllers', 'action' => 'test_action')));
 
         $guest = array();
         $user = array('username' => 'test');
@@ -83,7 +83,7 @@ class AuthRbacTest extends \lithium\test\Unit {
     }
 
     public function testCheckMessageOverride() {
-        $request = new Request(array('params' => array('library' => 'test_library', 'controller' => 'TestControllers', 'action' => 'test_action')));
+        $request = new Request(array('params' => array('library' => 'test_library', 'controller' => 'test_controllers', 'action' => 'test_action')));
 
         $guest = array();
         $user = array('username' => 'test');
@@ -98,7 +98,7 @@ class AuthRbacTest extends \lithium\test\Unit {
         $result = Access::check('test_message_override', $user, $request, array('checkSession' => false, 'success' => 'true'));
         $this->assertIdentical($expected, $result);
 
-        $request->params = array('controller' => 'TestControllers', 'action' => 'test_deinied_action');
+        $request->params = array('controller' => 'test_controllers', 'action' => 'test_deinied_action');
 
         $request->data = $guest;
         $expected = array('message' => 'You are not permitted to access this area.', 'redirect' => '/');
@@ -129,7 +129,7 @@ class AuthRbacTest extends \lithium\test\Unit {
     }
 
     public function testParseMatch() {
-        $request = new Request(array('params' => array('library' => 'test_library', 'controller' => 'TestControllers', 'action' => 'test_action')));
+        $request = new Request(array('params' => array('library' => 'test_library', 'controller' => 'test_controllers', 'action' => 'test_action')));
 
         $match = array('library' => 'test_library', 'controller' => 'TestControllers', 'action' => 'test_action');
         $this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
