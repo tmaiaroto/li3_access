@@ -41,7 +41,7 @@ class AuthRbacTest extends \lithium\test\Unit {
                 'roles' => array(
                     array(
                         'requesters' => 'user',
-                        'rules' => array(function($request) {
+                        'allow' => array(function($request) {
                             return $request->params['success'] ? true : false;
                         }),
                         'match' => array(

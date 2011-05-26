@@ -22,8 +22,6 @@ class AuthRbac extends \lithium\core\Object {
 
 	/**
 	 * The `Rbac` adapter will iterate trough the rbac data Array.
-	 * @todo: Implement file based data access
-	 * @todo: Shorter $match syntax
 	 *
 	 * @param mixed $user The user data array that holds all necessary information about
 	 *        the user requesting access. Or false (because Auth::check() can return false).
@@ -51,12 +49,12 @@ class AuthRbac extends \lithium\core\Object {
             $accessGranted = $match;
 
             $requesters = isset($role['requesters']) ? $role['requesters'] : '*';
-            $allow = isset($role['allow']) ? (boolean) $role['allow'] : true;
+            $allow = isset($role['allow']) ? $role['allow'] : true;
             $diff = array_diff((array) $requesters, array_keys($authedRoles));
 
-            if ((!$allow) ||
+            if (($allow === false) ||
                 (count($diff) === count($authedRoles)) ||
-                (!empty($role['rules']) && !static::_parseClosures($role['rules'], $request))
+                (is_array($allow) && !static::_parseClosures($allow, $request))
             ) {
                 $accessGranted = false;
             }
