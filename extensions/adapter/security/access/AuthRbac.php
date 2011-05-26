@@ -13,17 +13,7 @@ class AuthRbac extends \lithium\core\Object {
      * @var array $_autoConfig
      * @see lithium\core\Object::$_autoConfig
      */
-	protected $_autoConfig = array('redirect', 'message', 'roles');
-
-    /**
-     * @var mixed $_redirect Where to return if Rbac denies access.
-     */
-    protected $_redirect = null;
-
-    /**
-     * @var string $_message A message containing a reason for Rbac failing to deny access.
-     */
-    protected $_message = '';
+	protected $_autoConfig = array('roles');
 
 	/**
 	 * @var mixed $_roles null if unset array otherwise with fetched AuthObjects
@@ -48,9 +38,10 @@ class AuthRbac extends \lithium\core\Object {
             throw new ConfigException('No roles defined for adapter configuration.');
         }
 
-        $message = $this->_message;
-        $redirect = $this->_redirect;
-        $authedRoles = static::getRolesByAuth($request, array('checkSession' => false, 'success' => true));
+        $message = $options['message'];
+        $redirect = $options['redirect'];
+        unset($options['message'], $options['redirect']);
+        $authedRoles = static::getRolesByAuth($request, $options);
 
         $accessGranted = false;
         foreach ($this->_roles as $role) {
@@ -71,8 +62,8 @@ class AuthRbac extends \lithium\core\Object {
             }
 
             if (!$accessGranted) {
-                $message = !empty($role['message']) ? $role['message'] : $this->_message;
-                $redirect = !empty($role['redirect']) ? $role['redirect'] : $this->_redirect;
+                $message = !empty($role['message']) ? $role['message'] : $message;
+                $redirect = !empty($role['redirect']) ? $role['redirect'] : $redirect;
             }
         }
 

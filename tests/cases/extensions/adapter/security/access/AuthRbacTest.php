@@ -29,8 +29,6 @@ class AuthRbacTest extends \lithium\test\Unit {
             ),
             'test_check' => array(
                 'adapter' => 'AuthRbac',
-                'message' => 'Generic access denied message.',
-                'redirect' => '/',
                 'roles' => array(
                     'allow' => array(
                         'requesters' => 'user',
@@ -40,8 +38,6 @@ class AuthRbacTest extends \lithium\test\Unit {
             ),
             'test_message_override' => array(
                 'adapter' => 'AuthRbac',
-                'message' => 'Generic access denied message.',
-                'redirect' => '/',
                 'roles' => array(
                     array(
                         'allow' => false,
@@ -76,7 +72,7 @@ class AuthRbacTest extends \lithium\test\Unit {
         $user = array('username' => 'test');
 
         $request->data = $guest;
-        $expected = array('message' => 'Generic access denied message.', 'redirect' => '/');
+        $expected = array('message' => 'You are not permitted to access this area.', 'redirect' => '/');
         $result = Access::check('test_check', $guest, $request, array('checkSession' => false));
         $this->assertIdentical($expected, $result);
 
@@ -99,19 +95,24 @@ class AuthRbacTest extends \lithium\test\Unit {
 
         $request->data = $user;
         $expected = array();
-        $result = Access::check('test_message_override', $user, $request, array('checkSession' => false));
+        $result = Access::check('test_message_override', $user, $request, array('checkSession' => false, 'success' => 'true'));
         $this->assertIdentical($expected, $result);
 
         $request->params = array('controller' => 'TestControllers', 'action' => 'test_deinied_action');
 
         $request->data = $guest;
-        $expected = array('message' => 'Generic access denied message.', 'redirect' => '/');
+        $expected = array('message' => 'You are not permitted to access this area.', 'redirect' => '/');
         $result = Access::check('test_message_override', $guest, $request, array('checkSession' => false));
         $this->assertIdentical($expected, $result);
 
         $request->data = $user;
-        $expected = array('message' => 'Generic access denied message.', 'redirect' => '/');
+        $expected = array('message' => 'You are not permitted to access this area.', 'redirect' => '/');
         $result = Access::check('test_message_override', $user, $request, array('checkSession' => false));
+        $this->assertIdentical($expected, $result);
+
+        $request->data = $user;
+        $expected = array('message' => 'Message override!', 'redirect' => '/new_redirect');
+        $result = Access::check('test_message_override', $user, $request, array('checkSession' => false, 'message' => 'Message override!', 'redirect' => '/new_redirect'));
         $this->assertIdentical($expected, $result);
     }
 
