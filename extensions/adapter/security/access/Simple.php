@@ -6,7 +6,7 @@ use lithium\core\Libraries;
 use lithium\util\Set;
 
 class Simple extends \lithium\core\Object {
-    
+
 	/**
 	 * The `Simple` adapter will just check for user data.
 	 * It doesn't care about anything else.
@@ -18,7 +18,7 @@ class Simple extends \lithium\core\Object {
 	 * @return Array An empty array if access is allowed and an array with reasons for denial if denied.
 	 */
 	public function check($user, $request, array $options = array()) {
-		return $user ? $options : array();
+		return !$user ? $options : array();
 	}
 }
 
