@@ -36,7 +36,7 @@ class AuthRbacTest extends \lithium\test\Unit {
                     )
                 )
             ),
-            'test_match_closure' => array(
+            'test_closures' => array(
                 'adapter' => 'AuthRbac',
                 'roles' => array(
                     array(
@@ -187,17 +187,17 @@ class AuthRbacTest extends \lithium\test\Unit {
 
         $match = true;
         $test = function() { return true; };
-        $this->assertTrue(Access::adapter('test_match_closure')->parseMatch(array($test), $request));
+        $this->assertTrue(Access::adapter('test_closures')->parseMatch(array($test), $request));
 
         $match = false;
         $test = function() { return false; };
-        $this->assertFalse(Access::adapter('test_match_closure')->parseMatch(array($test), $request));
+        $this->assertFalse(Access::adapter('test_closures')->parseMatch(array($test), $request));
 
         $match = false;
-        $this->assertFalse(Access::adapter('test_match_closure')->parseMatch(array(), $request));
+        $this->assertFalse(Access::adapter('test_closures')->parseMatch(array(), $request));
     }
 
-    public function testMatchClosure() {
+    public function testClosures() {
         $request = new Request(array('params' => array('controller' => 'test_controllers', 'action' => 'test_action')));
 
         $user = $request->data = array('username' => 'test');
@@ -205,17 +205,17 @@ class AuthRbacTest extends \lithium\test\Unit {
 
         $request->params['success'] = true;
         $expected = array();
-        $result = Access::check('test_match_closure', $user, $request, $authSuccess);
+        $result = Access::check('test_closures', $user, $request, $authSuccess);
         $this->assertIdentical($expected, $result);
 
         $request->params['success'] = false;
         $expected = array('message' => 'You are not permitted to access this area.', 'redirect' => '/');
-        $result = Access::check('test_match_closure', $user, $request, $authSuccess);
+        $result = Access::check('test_closures', $user, $request, $authSuccess);
         $this->assertIdentical($expected, $result);
 
         $request->params = array('controller' => 'TestControllers', 'action' => 'bad_action');
         $request->params['success'] = true;
-        $result = Access::check('test_match_closure', $user, $request, $authSuccess);
+        $result = Access::check('test_closures', $user, $request, $authSuccess);
         $expected = array('message' => 'You are not permitted to access this area.', 'redirect' => '/');
         $this->assertIdentical($expected, $result);
     }
