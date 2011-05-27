@@ -31,42 +31,48 @@ class AuthRbac extends \lithium\core\Object {
 	 * @param array $options An array of additional options for the _getRolesByAuth method.
 	 * @return Array An empty array if access is allowed and an array with reasons for denial if denied.
 	 */
-	public function check($user, $request, array $options = array()) {
+    public function check($requester, $request, array $options = array()) {
         if (empty($this->_roles)) {
             throw new ConfigException('No roles defined for adapter configuration.');
         }
 
+        $roleDefaults = array(
+            'message' => '',
+            'redirect' => '',
+            'allow' => true,
+            'requesters' => '*',
+            'match' => '*::*'
+        );
+
         $message = $options['message'];
         $redirect = $options['redirect'];
-        unset($options['message'], $options['redirect']);
 
-        $accessGranted = false;
-        $authedRoles = static::_getRolesByAuth($request, $options);
+        $accessable = false;
         foreach ($this->_roles as $role) {
-            if (empty($role['match']) || !$match = static::parseMatch($role['match'], $request)) {
+            $role += $roleDefaults;
+
+            // Check to see if this role applies to this request
+            if (!static::parseMatch($role['match'], $request)) {
                 continue;
             }
-            $accessGranted = $match;
+            $accessable = true;
 
-            $requesters = isset($role['requesters']) ? $role['requesters'] : '*';
-            $allow = isset($role['allow']) ? $role['allow'] : true;
-            $diff = array_diff((array) $requesters, array_keys($authedRoles));
-
-            if (($allow === false) ||
-                (count($diff) === count($authedRoles)) ||
-                (is_array($allow) && !static::_parseClosures($allow, $request, $role))
+            if (($role['allow'] === false) ||
+                (!static::_hasRole($role['requesters'], $request, $options)) ||
+                (is_array($role['allow']) && !static::_parseClosures($role['allow'], $request, $role))
             ) {
-                $accessGranted = false;
+                $accessable = false;
             }
 
-            if (!$accessGranted) {
+            if (!$accessable) {
                 $message = !empty($role['message']) ? $role['message'] : $message;
                 $redirect = !empty($role['redirect']) ? $role['redirect'] : $redirect;
             }
         }
 
-        return !$accessGranted ? compact('message', 'redirect') : array();
-	}
+        return !$accessable ? compact('message', 'redirect') : array();
+    }
+
 
     /**
      * parseMatch Matches the current request parameters against a set of given parameters.
@@ -160,6 +166,31 @@ class AuthRbac extends \lithium\core\Object {
 		}
 		return $roles = array_filter($roles);
 	}
+
+    /**
+     * _hasRole Compares the results from _getRolesByAuth with the array passed to it.
+     *
+     * @param mixed $requesters
+     * @param mixed $request
+     * @param array $options
+     * @access protected
+     * @return void
+     */
+    protected function _hasRole($requesters, $request, array $options = array()) {
+        $authed = array_keys(static::_getRolesByAuth($request, $options));
+
+        $requesters = (array) $requesters;
+        if (in_array('*', $requesters)) {
+            return true;
+        }
+
+        foreach ($requesters as $requester) {
+            if (in_array($requester, $authed)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }
 
