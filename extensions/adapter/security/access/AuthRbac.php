@@ -41,7 +41,6 @@ class AuthRbac extends \lithium\core\Object {
         unset($options['message'], $options['redirect']);
 
         $accessGranted = false;
-        $authedRoles = static::_getRolesByAuth($request, $options);
         foreach ($this->_roles as $role) {
             if (empty($role['match']) || !$match = static::parseMatch($role['match'], $request)) {
                 continue;
@@ -50,10 +49,9 @@ class AuthRbac extends \lithium\core\Object {
 
             $requesters = isset($role['requesters']) ? $role['requesters'] : '*';
             $allow = isset($role['allow']) ? $role['allow'] : true;
-            $diff = array_diff((array) $requesters, array_keys($authedRoles));
 
             if (($allow === false) ||
-                (count($diff) === count($authedRoles)) ||
+                (!static::_hasRole($requesters, $request, $options)) ||
                 (is_array($allow) && !static::_parseClosures($allow, $request, $role))
             ) {
                 $accessGranted = false;
@@ -67,6 +65,57 @@ class AuthRbac extends \lithium\core\Object {
 
         return !$accessGranted ? compact('message', 'redirect') : array();
 	}
+
+    protected function _hasRole($requesters, $request, array $options = array()) {
+        $authed = array_keys(static::_getRolesByAuth($request, $options));
+
+        $requesters = (array) $requesters;
+        if (in_array('*', $requesters)) {
+            return true;
+        }
+
+        foreach ($requesters as $requester) {
+            if (in_array($requester, $authed)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function check($requester, $request, array $options = array()) {
+        if (empty($this->_roles)) {
+            throw new ConfigException('No roles defined for adapter configuration.');
+        }
+
+        $roleDefaults = array(
+            'message' => '',
+            'redirect' => '',
+            'allow' => true,
+            'requester' => '*',
+            'match' => '*::*'
+        );
+
+        $accessable = false;
+        foreach ($this->_roles as $role) {
+            $role += $roleDefaults;
+            extract($role);
+
+            // Check to see if this role applies to this request
+            if (!static::parseMatch($match, $request)) {
+                continue;
+            }
+            $accessable = true;
+
+            if (is_array($allow)) {
+                $allow = static::_parseClosures($allow, $request, $role);
+            }
+
+            if (((boolean) $allow === false) ||
+                ()
+            ) {
+            }
+        }
+    }
 
     /**
      * parseMatch Matches the current request parameters against a set of given parameters.
