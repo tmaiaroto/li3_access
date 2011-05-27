@@ -54,7 +54,7 @@ class AuthRbac extends \lithium\core\Object {
 
             if (($allow === false) ||
                 (count($diff) === count($authedRoles)) ||
-                (is_array($allow) && !static::_parseClosures($allow, $request))
+                (is_array($allow) && !static::_parseClosures($allow, $request, $role))
             ) {
                 $accessGranted = false;
             }
@@ -132,12 +132,12 @@ class AuthRbac extends \lithium\core\Object {
      * @access protected
      * @return void
      */
-    protected static function _parseClosures(array &$data = array(), $request = null) {
+    protected static function _parseClosures(array &$data = array(), $request = null, array &$roleOptions = array()) {
         $return = true;
         foreach ($data as $key => $item) {
             if (is_callable($item)) {
                 if ($return === true) {
-                    $return = (boolean) $item($request);
+                    $return = (boolean) $item($request, $roleOptions);
                 }
                 unset($data[$key]);
             }
