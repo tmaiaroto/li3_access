@@ -73,7 +73,6 @@ class AuthRbac extends \lithium\core\Object {
         return !$accessable ? compact('message', 'redirect') : array();
     }
 
-
     /**
      * parseMatch Matches the current request parameters against a set of given parameters.
      * Can match against a shorthand string (Controller::action) or a full array. If a parameter
