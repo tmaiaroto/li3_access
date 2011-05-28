@@ -105,7 +105,7 @@ Then we set the roles array. This array is required if you want to use this adap
 
 *match*
 
-A rule used to match (see: `AuthRbac::parseMatch()`) this role against the request object passed from the `check()` method. You may use a parameters array where you explicitly set the parameter/value pairs, a shorthand syntax very similar to the one you use when generating urls or a combination of the two. Without match being set the role will always deny access.
+A rule used to match (see: `AuthRbac::parseMatch()`) this role against the request object passed from the `check()` method. You may use a parameters array where you explicitly set the parameter/value pairs, a shorthand syntax very similar to the one you use when generating urls or even a. Without match being set the role will always deny access.
 
 Examples:
 
