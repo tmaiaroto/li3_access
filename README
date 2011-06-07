@@ -42,3 +42,91 @@ Note: The above example assumes you're using Lithium's Auth class to obtain user
 Also Note: To call methods from the adapter that are not in the Access class, you will need to access it like so:
 
 Access::adapter('rule_based')->add();
+
+=============================================================================================
+Example for Role Based Access via the Rbac Adapter and Auth Roles (config/bootstrap/auth.php)
+Info:
+      A user could assigned to more than one Role!
+      The roles are check sequentially. You could do :
+		allow,deny,allow,allow,deny = deny
+		allow,deny,allow,allow = allow
+=============================================================================================
+
+
+
+use lithium\action\Dispatcher;
+use lithium\security\Auth;
+use lithium\storage\Session;
+use lithium\core\Libraries;
+
+Libraries::add('li3_access');
+use li3_access\security\Access;
+
+Session::config(array(
+	'default' => array('adapter' => 'Php')
+));
+
+
+Auth::config(array(
+	//these are the roles as an array!
+	'user' => array(
+		'adapter' => 'Form',
+		'model' => 'User',
+		'fields' => array(
+			'email' => 'email',
+			'password' => 'password',
+		),
+		'scope' => array(
+			'active' => true,
+		),
+	),
+	'editor' => array(
+		'adapter' => 'Form',
+		'model' => 'Editor',
+		'fields' => array(
+			'email' => 'email',
+			'password' => 'password',
+		),
+		'scope' => array(
+			'active' => true,
+			'group' => 1,
+		),
+	),
+	'customer' => array(
+		'adapter' => 'Form',
+		'model' => 'Customer',
+		'fields' => array(
+			'email' => 'email',
+			'password' => 'password',
+		),
+		'scope' => array(
+			'active' => true,
+			'group' => 2,
+		),
+	),
+));
+
+Access::config(array(
+    'rbac' => array( //rule based access
+        'adapter' => 'AuthRbac',
+		'data' => array (
+			/*-array(
+				'allow', //allow || deny
+				'role', //owner ..not yet supported
+				'*', //role-name
+				'*', //controller_name without Controller Suffix
+				'*' //action (CaSe SensitiVE !)
+			),*/
+			array('allow', 'role', '*', 'Pages', '*'),
+			array('allow', 'role', '*',	'Users', 'login'),
+			array('allow', 'role', '*', 'Customers', 'index'),
+			array('allow', 'role', '*', 'Customers', 'create'),
+			array('allow', 'role', 'user', 'Users', 'logout'),
+			array('allow', 'role', 'user', 'Users', 'dashboard'),
+			array('allow', 'role', 'customer', 'Customers', 'dashboard'),
+			array('allow', 'role', 'editor', '*', '*'), //grant editor everything
+			array('deny' , 'role', 'user', 'Secret', '*'), //deny user access to Secrets actions
+			array('allow', 'role', 'user', 'Secret', 'wtf'), //but allow the wtf action
+		),
+    )
+));
