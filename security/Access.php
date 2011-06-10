@@ -6,7 +6,7 @@
  * @copyright     Copyright 2010, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
 */
- 
+
 namespace li3_access\security;
 
 use lithium\core\ConfigException;
@@ -16,7 +16,7 @@ use lithium\core\ConfigException;
  *
  * `Access` exposes a set of methods which adapters can implement: `set()`, `check()` and `clear()`.
  * You can read more about each method below.
- * 
+ *
  * For additional information on configuring and working with `Access`, see the `Simple` adapter.
  *
  * @see li3_access\extensions\adapter\auth\Simple
@@ -62,7 +62,7 @@ class Access extends \lithium\core\Adaptable {
         $config = parent::_initConfig($name, $config) + $defaults;
         return $config;
     }
-    
+
 	/**
 	 * Performs an access check against the specified configuration, and returns true
 	 * if access is permitted and an array with additional details if access is denied.
@@ -86,7 +86,7 @@ class Access extends \lithium\core\Adaptable {
 		$options += $defaults;
 
 		if (($config = static::_config($name)) === null) {
-			throw new ConfigException("Configuration '{$name}' has not been defined.");
+			throw new ConfigException("Configuration `{$name}` has not been defined.");
 		}
 		$filter = function($self, $params) use ($name) {
 			return $self::adapter($name)->check($params['user'], $params['request'], $params['options']);
@@ -95,6 +95,7 @@ class Access extends \lithium\core\Adaptable {
 		$params = compact('user', 'request', 'options');
 		return static::_filter(__FUNCTION__, $params, $filter, $filters);
 	}
+
 }
 
 ?>
