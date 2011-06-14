@@ -36,16 +36,17 @@ class AuthRbac extends \lithium\core\Object {
             throw new ConfigException('No roles defined for adapter configuration.');
         }
 
+        $options += array('options' => array('class' => 'error'));
         $roleDefaults = array(
             'message' => '',
             'redirect' => '',
             'allow' => true,
             'requesters' => '*',
-            'match' => '*::*'
+            'match' => '*::*',
+            'options' => array()
         );
 
-        $message = $options['message'];
-        $redirect = $options['redirect'];
+        extract($options);
 
         $accessable = false;
         foreach ($this->_roles as $role) {
@@ -67,10 +68,11 @@ class AuthRbac extends \lithium\core\Object {
             if (!$accessable) {
                 $message = !empty($role['message']) ? $role['message'] : $message;
                 $redirect = !empty($role['redirect']) ? $role['redirect'] : $redirect;
+                $options = !empty($role['options']) ? $role['options'] : $options;
             }
         }
 
-        return !$accessable ? compact('message', 'redirect') : array();
+        return !$accessable ? compact('message', 'redirect', 'options') : array();
     }
 
     /**
