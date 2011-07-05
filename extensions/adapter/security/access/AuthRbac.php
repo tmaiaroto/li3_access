@@ -29,7 +29,11 @@ class AuthRbac extends \lithium\core\Object {
 	 * @param array $options An array of additional options for the _getRoles method.
 	 * @return Array An empty array on success. Array with message and redirect params on failure.
 	 */
-	public function check($requester, $request, array $options = array()) {
+	public function check($request, $requester = false, array $options = array()) {
+		if (!empty($options['roles'])) {
+			$this->_roles = $options['roles'];
+		}
+
 		if (empty($this->_roles)) {
 			throw new ConfigException('No roles defined for adapter configuration.');
 		}
@@ -51,14 +55,14 @@ class AuthRbac extends \lithium\core\Object {
 			$role += $roleDefaults;
 
 			// Check to see if this role applies to this request
-			if (!static::_match($role['match'], $request)) {
+			if (static::_match($role['match'], $request) === false) {
 				continue;
 			}
-			var_dump(!static::_match($role['match'], $request));
 			$accessable = true;
 
+
 			if (
-				!$role['allow'] !== false ||
+				$role['allow'] === false ||
 				!static::_hasRole($role['requesters'], $request, $options) ||
 				(
 					is_array($role['allow']) &&
@@ -160,9 +164,9 @@ class AuthRbac extends \lithium\core\Object {
 	 * @param Request $request Object
 	 * @return array|mixed $roles Roles with attachted User Models
 	 */
-	protected static function _getRoles($request, array $options = array()){
+	protected static function _getRoles($request, array $options = array()) {
 		$roles = array('*' => '*');
-		foreach (array_keys(Auth::config()) as $key){
+		foreach (array_keys(Auth::config()) as $key) {
 			if ($check = Auth::check($key, $request, $options)) {
 				$roles[$key] = $check;
 			}
@@ -171,7 +175,7 @@ class AuthRbac extends \lithium\core\Object {
 	}
 
 	/**
-	 * _hasRole Compares the results from _getRoles with the array passed to it.
+	 * Compares the results from _getRoles with the array passed to it.
 	 *
 	 * @param mixed $requesters
 	 * @param mixed $request
