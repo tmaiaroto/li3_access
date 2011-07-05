@@ -26,7 +26,7 @@ class AccessTest extends \lithium\test\Unit {
                         return $chain->next($self, $params, $chain);
                     },
                     function($self, $params, $chain) {
-                        if (!$params['user']) {
+                        if (!$params['requester']) {
                             return array('message' => 'Access denied.', 'redirect' => $params['options']['redirect']);
                         } else {
                             return $chain->next($self, $params, $chain);
@@ -43,11 +43,11 @@ class AccessTest extends \lithium\test\Unit {
         $request = new Request();
 
         $expected = array();
-        $result = Access::check('test_access', array('username' => 'Tom'), $request);
+        $result = Access::check('test_access', $request, array('username' => 'Tom'));
         $this->assertEqual($expected, $result);
 
         $expected = array('message' => 'Access denied.', 'redirect' => '/login');
-        $result = Access::check('test_access', false, $request, array('redirect' => '/login', 'message' => 'Access denied.'));
+        $result = Access::check('test_access', $request, null, array('redirect' => '/login', 'message' => 'Access denied.'));
         $this->assertEqual($expected, $result);
     }
 
@@ -55,7 +55,7 @@ class AccessTest extends \lithium\test\Unit {
         $request = new Request();
 
         $expected = array('message' => 'Access denied.', 'redirect' => '/login');
-        $result = Access::check('test_access_with_filters', false, $request, array('redirect' => '/login'));
+        $result = Access::check('test_access_with_filters', $request, null, array('redirect' => '/login'));
         $this->assertEqual($expected, $result);
     }
 
@@ -65,7 +65,7 @@ class AccessTest extends \lithium\test\Unit {
         Access::reset();
         $this->assertIdentical(array(), Access::config());
         $this->expectException("Configuration `test_no_config` has not been defined.");
-        Access::check('test_no_config', false, $request);
+        Access::check('test_no_config', $request, null);
     }
 }
 ?>

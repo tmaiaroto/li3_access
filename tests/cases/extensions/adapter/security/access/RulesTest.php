@@ -34,7 +34,7 @@ class RulesTest extends \lithium\test\Unit {
             array('rule' => 'allowIp', 'message' => 'You can not access this from your location. (IP: ' . $_SERVER['REMOTE_ADDR'] . ')', 'ip' => $_SERVER['REMOTE_ADDR'])
         );
         $expected = array();
-        $result = Access::check('test_rulebased', array('username' => 'Tom'), $request, array('rules' => $rules));
+        $result = Access::check('test_rulebased', $request, array('username' => 'Tom'), array('rules' => $rules));
         $this->assertEqual($expected, $result);
 
         // Single rule in multi-demnsional array
@@ -42,29 +42,29 @@ class RulesTest extends \lithium\test\Unit {
             array('rule' => 'denyAll', 'message' => 'You must be logged in.')
         );
         $expected = array('rule' => 'denyAll', 'message' => 'You must be logged in.', 'redirect' => '/');
-        $result = Access::check('test_rulebased', array('username' => 'Tom'), $request, array('rules' => $rules));
+        $result = Access::check('test_rulebased', $request, array('username' => 'Tom'), array('rules' => $rules));
         $this->assertEqual($expected, $result);
 
         // Single rule (single array), but it should fail because user is an empty array
         $rules = array('rule' => 'allowAnyUser', 'message' => 'You must be logged in.');
         $expected = array('rule' => 'allowAnyUser', 'message' => 'You must be logged in.', 'redirect' => '/');
-        $result = Access::check('test_rulebased', array(), $request, array('rules' => $rules));
+        $result = Access::check('test_rulebased', $request, array(), array('rules' => $rules));
         $this->assertEqual($expected, $result);
         // and if false instead of an empty array (because one might typically run Auth:check() which could return false)
-        $result = Access::check('test_rulebased', false, $request, array('rules' => $rules));
+        $result = Access::check('test_rulebased', $request, false, array('rules' => $rules));
         $this->assertEqual($expected, $result);
 
         // No rules
         $expected = array('rule' => false, 'message' => 'You are not permitted to access this area.', 'redirect' => '/');
-        $result = Access::check('test_rulebased', array('username' => 'Tom'), $request);
+        $result = Access::check('test_rulebased', $request, array('username' => 'Tom'));
         $this->assertEqual($expected, $result);
 
         // Adding a rule "on the fly" by passing a closure, this rule should pass
         $rules = array(
-            array('rule' => function($user, $request, $options) { return $user['username'] == 'Tom'; }, 'message' => 'Access denied.')
+            array('rule' => function($request, $requester, $options) { return $requester['username'] == 'Tom'; }, 'message' => 'Access denied.')
         );
         $expected = array();
-        $result = Access::check('test_rulebased', array('username' => 'Tom'), $request, array('rules' => $rules));
+        $result = Access::check('test_rulebased', $request, array('username' => 'Tom'), array('rules' => $rules));
         $this->assertEqual($expected, $result);
     }
 
@@ -72,7 +72,7 @@ class RulesTest extends \lithium\test\Unit {
         $request = new Request();
 
         // The add() method to add a rule
-        Access::adapter('test_rulebased')->add('testDeny', function($user, $request, $options) {
+        Access::adapter('test_rulebased')->add('testDeny', function($requester, $request, $options) {
             return false;
         });
 
@@ -80,7 +80,7 @@ class RulesTest extends \lithium\test\Unit {
             array('rule' => 'testDeny', 'message' => 'Access denied.')
         );
         $expected = array('rule' => 'testDeny', 'message' => 'Access denied.', 'redirect' => '/');
-        $result = Access::check('test_rulebased', array('username' => 'Tom'), $request, array('rules' => $rules));
+        $result = Access::check('test_rulebased', $request, array('username' => 'Tom'), array('rules' => $rules));
         $this->assertEqual($expected, $result);
 
         // Make sure the rule got added to the $_rules property
