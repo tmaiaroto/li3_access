@@ -34,7 +34,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 		));
 
 		Access::config(array(
-			'test_no_roles_configured' => array(
+			'no_roles' => array(
 				'adapter' => 'AuthRbac'
 			),
 			'test_check' => array(
@@ -53,11 +53,11 @@ class AuthRbacTest extends \lithium\test\Unit {
 						'requesters' => '*',
 						'allow' => array(function($request, &$roleOptions) {
 							$roleOptions['message'] = 'Test allow options set.';
-							return $request->params['allow'] ? true : false;
+							return $request->params['allow'];
 						}),
 						'match' => array(
 							function($request) {
-								return $request->params['match'] ? true : false;
+								return $request->params['match'];
 							},
 							'controller' => 'TestControllers',
 							'action' => 'test_action'
@@ -104,22 +104,85 @@ class AuthRbacTest extends \lithium\test\Unit {
 				'class' => 'error'
 			)
 		);
-		$result = Access::check('test_check', $this->_request, false, array(
-			'checkSession' => false
-		));
+		$result = Access::check('test_check', $this->_request, false);
 		$this->assertIdentical($expected, $result);
 
 		$expected = array();
 		$user = array('username' => 'test');
-		$result = Access::check('test_check', $this->_request, $user, array(
-			'checkSession' => false
-		));
+		$result = Access::check('test_check', $this->_request, $user);
 		$this->assertIdentical($expected, $result);
 	}
 
-	public function testNoRoles() {
+	public function testRoles() {
 		$this->expectException('No roles defined for adapter configuration.');
-		Access::check('test_no_roles_configured', $this->_request);
+		Access::check('no_roles', $this->_request);
+	}
+
+	public function testClosures() {
+		$request = $this->_request;
+
+		$request->params['allow'] = $request->params['match'] = true;
+		$expected = array();
+		$result = Access::check('test_closures', $request, false);
+		$this->assertIdentical($expected, $result);
+
+		$request->params['allow'] = false;
+		$expected = array(
+			'message' => 'Test allow options set.',
+			'redirect' => '/',
+			'options' => array(
+				'class' => 'error'
+			)
+		);
+		$result = Access::check('test_closures', $request, false);
+		$this->assertIdentical($expected, $result);
+
+		$request->params['allow'] = true;
+		$request->params['match'] = false;
+		$expected = array(
+			'message' => 'You are not permitted to access this area.',
+			'redirect' => '/',
+			'options' => array(
+				'class' => 'error'
+			)
+		);
+		$result = Access::check('test_closures', $request, false);
+		$this->assertIdentical($expected, $result);
+
+		$roles = array(array(
+			'match' => '*::*',
+			'allow' => 'bad_closure'
+		));
+		$result = Access::check('test_closures', $request, false, compact('roles'));
+		$this->assertIdentical($expected, $result);
+	}
+
+	public function testNoMatch() {
+		$expected = array(
+			'message' => 'You are not permitted to access this area.',
+			'redirect' => '/',
+			'options' => array(
+				'class' => 'error'
+			)
+		);
+		$roles = array(array(
+			'match' => array('Pages::index')
+		));
+		$result = Access::check('no_roles', $this->_request, false, compact('roles'));
+		$this->assertIdentical($expected, $result);
+	}
+
+	public function testRoleOverride() {
+		$expected = array();
+		$result = Access::check('no_roles', $this->_request, false, array(
+			'roles' => array(
+				array(
+					'match' => '*::*',
+					'requesters' => '*'
+				)
+			)
+		));
+		$this->assertIdentical($expected, $result);
 	}
 
 	public function testOptionOverride() {
@@ -130,9 +193,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 				'class' => 'notice'
 			)
 		);
-		$result = Access::check('test_option_override', $this->_request, false, array('
-			checkSession' => false
-		));
+		$result = Access::check('test_option_override', $this->_request, false, array('whatt'));
 		$this->assertIdentical($expected, $result);
 	}
 }

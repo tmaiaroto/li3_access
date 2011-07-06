@@ -3,6 +3,7 @@
 namespace li3_access\extensions\adapter\security\access;
 
 use lithium\security\Auth;
+use lithium\util\Inflector;
 use lithium\core\ConfigException;
 
 class AuthRbac extends \lithium\core\Object {
@@ -55,7 +56,7 @@ class AuthRbac extends \lithium\core\Object {
 		}
 
 		foreach ($this->_roles as $role) {
-			$accessable = false;
+			$allow = false;
 			$role += $defaults;
 
 			if ($this->_match($role['match'], $request) === false) {
@@ -64,7 +65,7 @@ class AuthRbac extends \lithium\core\Object {
 
 			$roles = $this->_roles($request);
 			$accessable = $this->_accessable($role['requesters'], $roles, $options);
-			$allow = $this->_runClosures($role['allow'], $request, $role) && $accessable;
+			$allow = $this->_run($role['allow'], $request, $role) && $accessable;
 
 			if (!$allow) {
 				$message = !empty($role['message']) ? $role['message'] : $message;
@@ -73,7 +74,7 @@ class AuthRbac extends \lithium\core\Object {
 			}
 		}
 
-		return !$accessable ? compact('message', 'redirect', 'options') : array();
+		return !$allow ? compact('message', 'redirect', 'options') : array();
 	}
 
 	/**
@@ -93,7 +94,7 @@ class AuthRbac extends \lithium\core\Object {
 		}
 
 		if (is_array($match)) {
-			if (!$this->_runClosures($match, $request)) {
+			if (!$this->_run($match, $request)) {
 				return false;
 			}
 		}
@@ -117,7 +118,7 @@ class AuthRbac extends \lithium\core\Object {
 			}
 
 			if ($type === 'controller') {
-				$value = \lithium\util\Inflector::underscore($value);
+				$value = Inflector::underscore($value);
 			}
 
 			if (!array_key_exists($type, $request->params) || $value !== $request->params[$type]) {
@@ -177,20 +178,20 @@ class AuthRbac extends \lithium\core\Object {
 	 * @access protected
 	 * @return void
 	 */
-	protected function _runClosures(&$data, $request = null, array &$options = array()) {
+	protected function _run(&$data, $request = null, array &$options = array()) {
 		if (is_bool($data)) {
 			return $data;
 		}
 
 		if (!is_array($data)) {
-			$data = (array) $data;
+			return false;
 		}
 
 		$allow = true;
 		foreach ($data as $key => $item) {
 			if (is_callable($item)) {
 				if ($allow === true) {
-					$allow = (boolean) $item($request, $option);
+					$allow = (boolean) $item($request, $options);
 				}
 				unset($data[$key]);
 			}
