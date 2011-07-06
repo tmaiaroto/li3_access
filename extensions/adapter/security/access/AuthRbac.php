@@ -55,13 +55,14 @@ class AuthRbac extends \lithium\core\Object {
 			$request->data = $requester;
 		}
 
+		$allow = false;
 		foreach ($this->_roles as $role) {
-			$allow = false;
 			$role += $defaults;
 
 			if ($this->_match($role['match'], $request) === false) {
 				continue;
 			}
+			$allow = false;
 
 			$roles = $this->_roles($request);
 			$accessable = $this->_accessable($role['requesters'], $roles, $options);

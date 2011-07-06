@@ -40,9 +40,13 @@ class AuthRbacTest extends \lithium\test\Unit {
 			'test_check' => array(
 				'adapter' => 'AuthRbac',
 				'roles' => array(
-					'allow' => array(
+					array(
 						'requesters' => 'user',
 						'match' => '*::*'
+					),
+					array(
+						'requesters' => 'user',
+						'match' => 'Pages::index'
 					)
 				)
 			),
