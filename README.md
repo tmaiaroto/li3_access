@@ -166,7 +166,7 @@ Assuming we have an Auth configuration like so:
     	)
     ));
 
-Setting 'requester' => array('user', 'customer') would only apply the rule to anyone that could authenticate as a user or customer. Setting 'requester' => '*' would mean that all of these auth configurations and people that are not authenticated would have this role applied to them.
+Setting `'requester' => array('user', 'customer')` would only apply the rule to anyone that could authenticate as a user or customer. Setting 'requester' => '*' would mean that all of these auth configurations and people that are not authenticated would have this role applied to them.
 
 `'allow'`
 
