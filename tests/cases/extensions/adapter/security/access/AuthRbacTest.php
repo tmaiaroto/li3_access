@@ -65,7 +65,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 					)
 				)
 			),
-			'test_message_override' => array(
+			'test_option_override' => array(
 				'adapter' => 'AuthRbac',
 				'roles' => array(
 					array(
@@ -76,13 +76,15 @@ class AuthRbacTest extends \lithium\test\Unit {
 					array(
 						'message' => 'Rule access denied message.',
 						'redirect' => '/',
+						'options' => array(
+							'class' => 'notice'
+						),
 						'requesters' => 'user',
 						'match' => 'TestControllers::test_action'
 					),
 					array(
 						'message' => 'Test no overwrite.',
-						'redirect' => '/test_no_overwrite',
-						'requesters' => 'user',
+						'redirect' => 'Test::no_overwrite',
 						'match' => null
 					)
 				)
@@ -107,11 +109,11 @@ class AuthRbacTest extends \lithium\test\Unit {
 		));
 		$this->assertIdentical($expected, $result);
 
+		$expected = array();
 		$user = array('username' => 'test');
 		$result = Access::check('test_check', $this->_request, $user, array(
 			'checkSession' => false
 		));
-		$expected = array();
 		$this->assertIdentical($expected, $result);
 	}
 
@@ -120,5 +122,18 @@ class AuthRbacTest extends \lithium\test\Unit {
 		Access::check('test_no_roles_configured', $this->_request);
 	}
 
+	public function testOptionOverride() {
+		$expected = array(
+			'message' => 'Rule access denied message.',
+			'redirect' => '/',
+			'options' => array(
+				'class' => 'notice'
+			)
+		);
+		$result = Access::check('test_option_override', $this->_request, false, array('
+			checkSession' => false
+		));
+		$this->assertIdentical($expected, $result);
+	}
 }
 ?>
