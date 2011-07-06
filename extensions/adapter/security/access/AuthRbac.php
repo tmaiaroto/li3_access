@@ -39,7 +39,7 @@ class AuthRbac extends \lithium\core\Object {
 		}
 
 		$options += array('options' => array('class' => 'error'));
-		$roleDefaults = array(
+		$defaults = array(
 			'message' => '',
 			'redirect' => '',
 			'allow' => true,
@@ -50,29 +50,23 @@ class AuthRbac extends \lithium\core\Object {
 
 		extract($options);
 
-		$accessable = false;
-		foreach ($this->_roles as $role) {
-			$role += $roleDefaults;
+		if (empty($request->data) && $requester) {
+			$request->data = $requester;
+		}
 
-			// Check to see if this role applies to this request
-			if (static::_match($role['match'], $request) === false) {
+		foreach ($this->_roles as $role) {
+			$accessable = false;
+			$role += $defaults;
+
+			if ($this->_match($role['match'], $request) === false) {
 				continue;
 			}
-			$accessable = true;
 
+			$roles = $this->_roles($request);
+			$accessable = $this->_accessable($role['requesters'], $roles, $options);
+			$allow = $this->_runClosures($role['allow'], $request, $role) && $accessable;
 
-			if (
-				$role['allow'] === false ||
-				!static::_hasRole($role['requesters'], $request, $options) ||
-				(
-					is_array($role['allow']) &&
-					!static::_runClosures($role['allow'], $request, $role)
-				)
-			) {
-				$accessable = false;
-			}
-
-			if (!$accessable) {
+			if (!$allow) {
 				$message = !empty($role['message']) ? $role['message'] : $message;
 				$redirect = !empty($role['redirect']) ? $role['redirect'] : $redirect;
 				$options = !empty($role['options']) ? $role['options'] : $options;
@@ -93,13 +87,13 @@ class AuthRbac extends \lithium\core\Object {
 	 * @access public
 	 * @return boolean True if a match is found.
 	 */
-	protected static function _match($match, $request) {
+	protected function _match($match, $request) {
 		if (empty($match)) {
 			return false;
 		}
 
 		if (is_array($match)) {
-			if (!static::_runClosures($match, $request)) {
+			if (!$this->_runClosures($match, $request)) {
 				return false;
 			}
 		}
@@ -135,36 +129,12 @@ class AuthRbac extends \lithium\core\Object {
 	}
 
 	/**
-	 * Itterates over an array and runs any anonymous functions it finds. Returns
-	 * true if all of the closures it runs evaluate to true. $match is passed by
-	 * reference and any closures found are removed from it before the method is complete.
-	 *
-	 * @param array $data
-	 * @param mixed $request
-	 * @static
-	 * @access protected
-	 * @return void
-	 */
-	protected static function _runClosures(array &$data = array(), $request = null, array &$roleOptions = array()) {
-		$return = true;
-		foreach ($data as $key => $item) {
-			if (is_callable($item)) {
-				if ($return === true) {
-					$return = (boolean) $item($request, $roleOptions);
-				}
-				unset($data[$key]);
-			}
-		}
-		return $return;
-	}
-
-	/**
 	 * @todo reduce Model Overhead (will duplicated in each model)
 	 *
 	 * @param Request $request Object
-	 * @return array|mixed $roles Roles with attachted User Models
+	 * @return array|mixed $roles Roles with attached User Models
 	 */
-	protected static function _getRoles($request, array $options = array()) {
+	protected function _roles($request, array $options = array()) {
 		$roles = array('*' => '*');
 		foreach (array_keys(Auth::config()) as $key) {
 			if ($check = Auth::check($key, $request, $options)) {
@@ -175,7 +145,7 @@ class AuthRbac extends \lithium\core\Object {
 	}
 
 	/**
-	 * Compares the results from _getRoles with the array passed to it.
+	 * Compares the results from _roles with the array passed to it.
 	 *
 	 * @param mixed $requesters
 	 * @param mixed $request
@@ -183,20 +153,49 @@ class AuthRbac extends \lithium\core\Object {
 	 * @access protected
 	 * @return void
 	 */
-	protected function _hasRole($requesters, $request, array $options = array()) {
-		$authed = array_keys(static::_getRoles($request, $options));
-
+	protected function _accessable($requesters, $roles, array $options = array()) {
 		$requesters = (array) $requesters;
 		if (in_array('*', $requesters)) {
 			return true;
 		}
 
 		foreach ($requesters as $requester) {
-			if (in_array($requester, $authed)) {
+			if (array_key_exists($requester, $roles)) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Itterates over an array and runs any anonymous functions it finds. Returns
+	 * true if all of the closures it runs evaluate to true. $match is passed by
+	 * reference and any closures found are removed from it before the method is complete.
+	 *
+	 * @param array $data
+	 * @param mixed $request
+	 * @access protected
+	 * @return void
+	 */
+	protected function _runClosures(&$data, $request = null, array &$options = array()) {
+		if (is_bool($data)) {
+			return $data;
+		}
+
+		if (!is_array($data)) {
+			$data = (array) $data;
+		}
+
+		$allow = true;
+		foreach ($data as $key => $item) {
+			if (is_callable($item)) {
+				if ($allow === true) {
+					$allow = (boolean) $item($request, $option);
+				}
+				unset($data[$key]);
+			}
+		}
+		return $allow;
 	}
 
 }
