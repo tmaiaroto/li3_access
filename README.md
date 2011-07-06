@@ -141,7 +141,7 @@ Not only must the library, controller and action match but the closure must retu
 
 `'requester'`
 
-A string or an array of auth configuration keys that this rule applies to. The string `*` denotes everyone, even those who are not authenticated. A string of `admin` will apply this to everyone who can be authenticated against the user defined `admin` Auth configuration. An array of configuration keys does the same but you can apply it to multiple Auth configurations in one go.
+A string or an array of auth configuration keys that this rule applies to. The string `*` denotes everyone, even those who are not authenticated. A string of `admin` will validate anyone who can be authenticated against the user defined `admin` Auth configuration. An array of configuration keys does the same but you can apply it to multiple Auth configurations in one go.
 
 Assuming we have an Auth configuration like so:
 
