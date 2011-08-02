@@ -1,11 +1,12 @@
 <?php
+
 /**
  * li3_access plugin for Lithium: the most rad php framework.
  *
  * @author        Tom Maiaroto
  * @copyright     Copyright 2010, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
-*/
+ */
 
 namespace li3_access\security;
 
@@ -23,45 +24,44 @@ use lithium\core\ConfigException;
  */
 class Access extends \lithium\core\Adaptable {
 
-    /**
-     * Stores configurations for various authentication adapters.
-     *
-     * @var object `Collection` of authentication configurations.
-    */
-    protected static $_configurations = array();
+	/**
+	 * Stores configurations for various authentication adapters.
+	 *
+	 * @var object `Collection` of authentication configurations.
+	 */
+	protected static $_configurations = array( );
 
-    /**
-     * Libraries::locate() compatible path to adapters for this class.
-     *
-     * @see lithium\core\Libraries::locate()
-     * @var string Dot-delimited path.
-    */
-    protected static $_adapters = 'adapter.security.access';
+	/**
+	 * Libraries::locate() compatible path to adapters for this class.
+	 *
+	 * @see lithium\core\Libraries::locate()
+	 * @var string Dot-delimited path.
+	 */
+	protected static $_adapters = 'adapter.security.access';
 
-    /**
-     * Dynamic class dependencies.
-     *
-     * @var array Associative array of class names & their namespaces.
-     */
-    protected static $_classes = array(
-    );
+	/**
+	 * Dynamic class dependencies.
+	 *
+	 * @var array Associative array of class names & their namespaces.
+	 */
+	protected static $_classes = array( );
 
-    /**
-     * Called when an adapter configuration is first accessed, this method sets the default
-     * configuration for session handling. While each configuration can use its own session class
-     * and options, this method initializes them to the default dependencies written into the class.
-     * For the session key name, the default value is set to the name of the configuration.
-     *
-     * @param string $name The name of the adapter configuration being accessed.
-     * @param array $config The user-specified configuration.
-     * @return array Returns an array that merges the user-specified configuration with the
-     *         generated default values.
-    */
-    protected static function _initConfig($name, $config) {
-        $defaults = array();
-        $config = parent::_initConfig($name, $config) + $defaults;
-        return $config;
-    }
+	/**
+	 * Called when an adapter configuration is first accessed, this method sets the default
+	 * configuration for session handling. While each configuration can use its own session class
+	 * and options, this method initializes them to the default dependencies written into the class.
+	 * For the session key name, the default value is set to the name of the configuration.
+	 *
+	 * @param string $name The name of the adapter configuration being accessed.
+	 * @param array $config The user-specified configuration.
+	 * @return array Returns an array that merges the user-specified configuration with the
+	 *         generated default values.
+	 */
+	protected static function _initConfig($name, $config) {
+		$defaults = array();
+		$config = parent::_initConfig($name, $config) + $defaults;
+		return $config;
+	}
 
 	/**
 	 * Performs an access check against the specified configuration, and returns true
@@ -81,7 +81,7 @@ class Access extends \lithium\core\Adaptable {
 	 */
 	public static function check($name, $user, $request, array $options = array()) {
 		$defaults = array(
-			'message' => 'You are not permitted to access this area.', 'redirect' => '/'
+				'message' => 'You are not permitted to access this area.', 'redirect' => '/'
 		);
 		$options += $defaults;
 
@@ -89,8 +89,8 @@ class Access extends \lithium\core\Adaptable {
 			throw new ConfigException("Configuration `{$name}` has not been defined.");
 		}
 		$filter = function($self, $params) use ($name) {
-			return $self::adapter($name)->check($params['user'], $params['request'], $params['options']);
-		};
+							return $self::adapter($name)->check($params['user'], $params['request'], $params['options']);
+						};
 		$filters = (array) $config['filters'];
 		$params = compact('user', 'request', 'options');
 		return static::_filter(__FUNCTION__, $params, $filter, $filters);

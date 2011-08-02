@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Lithium: the most rad php framework
  *
@@ -16,6 +17,7 @@ namespace li3_access\security;
 class AccessDeniedException extends \RuntimeException {
 
 	protected $code = 403;
+
 }
 
 ?>
