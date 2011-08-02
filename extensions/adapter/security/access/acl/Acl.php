@@ -67,7 +67,7 @@ class Acl extends \lithium\data\Model {
 					$db->name("{$type}.lft") . ' <= ' . $db->name("{$type}{$i}.lft") . ' AND ' . $db->name("{$type}.rght") . ' >= ' . $db->name("{$type}{$i}.rght"))
 				);
 			}
-			$result = $db->read($this, $queryData, -1);
+			$result = $db::read($this, $queryData, -1);
 			$path = array_values($path);
 
 			if (
@@ -77,9 +77,13 @@ class Acl extends \lithium\data\Model {
 			) {
 				return false;
 			}
-		} elseif (is_object($ref) && is_a($ref, 'Model')) {
+		} elseif (is_object($ref) && is_a($ref, 'lithium\data\Model')) {
 			$ref = array('model' => $ref->alias, 'foreign_key' => $ref->id);
+		} elseif (is_object($ref) && is_a($ref, 'lithium\action\Request')) {
+			$obj = $ref;
+			return $this->node($obj);
 		} elseif (is_array($ref) && !(isset($ref['model']) && isset($ref['foreign_key']))) {
+			// new associate row
 			$name = key($ref);
 
 			if (PHP5) {

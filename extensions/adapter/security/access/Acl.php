@@ -44,8 +44,8 @@ class Acl extends \lithium\core\Object {
 		);
 		$options = array_merge($defaultOptions,$options);
 
-		if(self::_check($requester, $request, $options)){
-			return $options;
+		if($check = self::_check($requester, $request, $options)){
+			return array('check'=> $check) + $options;
 		}else{
 			return array();
 		}
