@@ -43,12 +43,28 @@ class Acl extends \lithium\core\Object {
 				'redirect' => ''
 		);
 		$options = array_merge($defaultOptions,$options);
-
-		if($check = self::_check($requester, $request, $options)){
-			return array('check'=> $check) + $options;
-		}else{
-			return array();
+		if(!empty($requester)){
+			//$requester	Array [10]	
+			//	id	(string:4) 6317	
+			//	login	(string:3) ab2	
+			//	password	(string:32) a8eb58dbcd6a613056c578d3c3b0f97c	
+			//	name	(string:7) Andrzej	
+			//	surname	(string:9) Borkowski	
+			//	agent	(string:4) 1110	
+			//	email	null	
+			//	telephone_number	null	
+			//	password_expired	(string:29) 2020-03-30 09:25:27.823536+02	
+			//	role_id	(string:1) 5
+			$model = isset($this->_config['credentials']['model']) ? $this->_config['credentials']['model'] : null;
+			if(!empty($model)){
+				$requester = array($model => $requester);
+			}
+		
+			if($check = self::_check($requester, $request, $options)){
+				return array('check'=> $check) + $options;
+			}
 		}
+		return array();
 	}
 
 	/**
@@ -71,12 +87,12 @@ class Acl extends \lithium\core\Object {
 		$acoPath = Acos::node($aco);
 
 		if (empty($aroPath) || empty($acoPath)) {
-			throw new \Exception(Message::translate("Auth\Acl::check() - Failed ARO/ACO node lookup in permissions check.  Node references:\nAro: ") . print_r($aro, true) . "\nAco: " . print_r($aco, true));
+			throw new \Exception("Auth\Acl::check() - Failed ARO/ACO node lookup in permissions check.  Node references:\nAro: " . print_r($aro, true) . "\nAco: " . print_r($aco, true));
 			return false;
 		}
 
 		if ($acoPath == null || $acoPath == array()) {
-			throw new \Exception(Message::translate("Auth\Acl::check() - Failed ACO node lookup in permissions check.  Node references:\nAro: ") . print_r($aro, true) . "\nAco: " . print_r($aco, true));
+			throw new \Exception("Auth\Acl::check() - Failed ACO node lookup in permissions check.  Node references:\nAro: " . print_r($aro, true) . "\nAco: " . print_r($aco, true));
 			return false;
 		}
 

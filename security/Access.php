@@ -81,7 +81,7 @@ class Access extends \lithium\core\Adaptable {
 	 */
 	public static function check($name, $user, $request, array $options = array()) {
 		$defaults = array(
-				'message' => 'You are not permitted to access this area.', 'redirect' => '/'
+			'message' => 'You are not permitted to access this area.', 'redirect' => '/'
 		);
 		$options += $defaults;
 
@@ -89,8 +89,8 @@ class Access extends \lithium\core\Adaptable {
 			throw new ConfigException("Configuration `{$name}` has not been defined.");
 		}
 		$filter = function($self, $params) use ($name) {
-							return $self::adapter($name)->check($params['user'], $params['request'], $params['options']);
-						};
+			return $self::adapter($name)->check($params['user'], $params['request'], $params['options']);
+		};
 		$filters = (array) $config['filters'];
 		$params = compact('user', 'request', 'options');
 		return static::_filter(__FUNCTION__, $params, $filter, $filters);

@@ -4,6 +4,8 @@ namespace li3_access\extensions\adapter\security\access\acl;
 //use lithium\core\Libraries;
 //use UnexpectedValueException;
 //use lithium\security\Password;
+use lithium\core\Libraries;
+use lithium\core\ClassNotFoundException;
 use lithium\data\Connections;
 
 class Acl extends \lithium\data\Model {
@@ -23,7 +25,11 @@ class Acl extends \lithium\data\Model {
 
 		$result = null;
 
-		$table = $meta['source']; // aros
+		if (!empty($meta['source'])) {
+			$table = $meta['source']; // aros
+		} else {
+			//$table = Inflector::pluralize(Inflector::underscore($type));
+		}
 
 		if (empty($ref)) {
 			return null;
@@ -38,10 +44,10 @@ class Acl extends \lithium\data\Model {
 					"{$type}.rght" . ' >= ' . "{$type}0.rght",
 				'fields' => array('id', 'parent_id', 'model', 'foreign_key', 'alias'),
 				'joins' => array(array(
-					'table' => $table,
+					'source' => $table,
 					'alias' => "{$type}0",
 					'type' => 'LEFT',
-					'conditions' => array("{$type}0.alias" => $start)
+					'constraint' => array("{$type}0.alias" => $start)
 				)),
 				'order' => "{$type}.lft" . ' DESC'
 			));
@@ -51,10 +57,10 @@ class Acl extends \lithium\data\Model {
 
 				$queryData['joins'][] = array(
 					//'table' => $db->fullTableName($this),
-					'table' => $table,
+					'source' => $table,
 					'alias' => "{$type}{$i}",
 					'type'  => 'LEFT',
-					'conditions' => array(
+					'constraint' => array(
 						$db->name("{$type}{$i}.lft") . ' > ' . $db->name("{$type}{$j}.lft"),
 						$db->name("{$type}{$i}.rght") . ' < ' . $db->name("{$type}{$j}.rght"),
 						$db->name("{$type}{$i}.alias") . ' = ' . $db->value($alias, array('type'=>'string')),
@@ -67,7 +73,7 @@ class Acl extends \lithium\data\Model {
 					$db->name("{$type}.lft") . ' <= ' . $db->name("{$type}{$i}.lft") . ' AND ' . $db->name("{$type}.rght") . ' >= ' . $db->name("{$type}{$i}.rght"))
 				);
 			}
-			$result = $db::read($this, $queryData, -1);
+			$result = self::find('first', $queryData);
 			$path = array_values($path);
 
 			if (
@@ -78,31 +84,29 @@ class Acl extends \lithium\data\Model {
 				return false;
 			}
 		} elseif (is_object($ref) && is_a($ref, 'lithium\data\Model')) {
-			$ref = array('model' => $ref->alias, 'foreign_key' => $ref->id);
+			$ref = array('model' => $ref::_name(), 'foreign_key' => $ref::key());
 		} elseif (is_object($ref) && is_a($ref, 'lithium\action\Request')) {
 			$obj = $ref;
 			return $this->node($obj);
 		} elseif (is_array($ref) && !(isset($ref['model']) && isset($ref['foreign_key']))) {
-			// new associate row
+			//associate row
 			$name = key($ref);
 
-			if (PHP5) {
-				$model = ClassRegistry::init(array('class' => $name, 'alias' => $name));
-			} else {
-				$model =& ClassRegistry::init(array('class' => $name, 'alias' => $name));
-			}
-
+			$model = Libraries::locate('models', $name);
 			if (empty($model)) {
-				trigger_error(sprintf(__("Model class '%s' not found in AclNode::node() when trying to bind %s object", true), $type, $this->alias), E_USER_WARNING);
+				throw new ClassNotFoundException(sprintf("Model class '%s' not found in access\acl\Acl::node() when trying to bind %s object", $model, $type));
 				return null;
 			}
-
+		
+			//$model	null	
 			$tmpRef = null;
 			if (method_exists($model, 'bindNode')) {
-				$tmpRef = $model->bindNode($ref);
+				// @link http://book.cakephp.org/view/1547/Acts-As-a-Requester#x11-2-4-1-Group-only-ACL-1646
+				$tmpRef = $model::bindNode($ref);
 			}
 			if (empty($tmpRef)) {
-				$ref = array('model' => $name, 'foreign_key' => $ref[$name][$model->primaryKey]);
+				//$ref = array('model' => $name, 'foreign_key' => $ref[$name][$model->primaryKey]);
+				$ref = array('model' => $name, 'foreign_key' => $ref[$name][$model::key()]);
 			} else {
 				if (is_string($tmpRef)) {
 					return $this->node($tmpRef);
@@ -125,20 +129,41 @@ class Acl extends \lithium\data\Model {
 				'conditions' => $ref,
 				'fields' => array('id', 'parent_id', 'model', 'foreign_key', 'alias'),
 				'joins' => array(array(
-					'table' => $table,
+					'source' => $table,
 					'alias' => "{$type}0",
 					'type' => 'LEFT',
-					'conditions' => array(
-						$db->name("{$type}.lft") . ' <= ' . $db->name("{$type}0.lft"),
-						$db->name("{$type}.rght") . ' >= ' . $db->name("{$type}0.rght")
+					'constraint' => array(
+						"{$type}.lft" => array(' <= ' => "{$type}0.lft"),
+						"{$type}.rght" => array(' <= ' => "{$type}0.rght")
 					)
 				)),
 				'order' => $db->name("{$type}.lft") . ' DESC'
 			);
-			$result = $db->read($this, $queryData, -1);
-
+			//$queryData	Array [4]	
+			//	conditions	Array [2]	
+			//	fields	Array [5]	
+			//	joins	Array [1]	
+			//		0	Array [4]	
+			//			source	(string:4) aros	
+			//			alias	(string:5) Aros0	
+			//			type	(string:4) LEFT	
+			//			constraint	Array [2]	
+			//				Aros.lft	Array [1]	
+			//					 <= 	(string:9) Aros0.lft	
+			//				Aros.rght	Array [1]	
+			//					 <= 	(string:10) Aros0.rght	
+			//	order	(string:17) "Aros"."lft" DESC
+			
+			$result = self::find('first', $queryData);
+			// exception 'lithium\data\model\QueryException' with message
+			// 'SQL: SELECT Aros.id, Aros.parent_id, Aros.model, Aros.foreign_key, Aros.alias 
+			// FROM "aros" AS "Aros" 
+			// LEFT JOIN AS "Aros0" 
+			// WHERE "Aros0"."model" = 'Users' AND "Aros0"."foreign_key" = 6317 
+			// ORDER BY "Aros"."lft" DESC LIMIT 1; 
+			// ERROR: syntax error at or near "AS" at character 106' 
 			if (!$result) {
-				trigger_error(sprintf(__("AclNode::node() - Couldn't find %s node identified by \"%s\"", true), $type, print_r($ref, true)), E_USER_WARNING);
+				throw new \Exception(sprintf(__("AclNode::node() - Couldn't find %s node identified by \"%s\"", true), $type, print_r($ref, true)));
 			}
 		}
 		return $result;
