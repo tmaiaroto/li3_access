@@ -96,10 +96,6 @@ class AuthRbacTest extends \lithium\test\Unit {
 		));
 	}
 
-	public function tearDown() {
-		Auth::clear('user');
-	}
-
 	public function testCheck() {
 		$expected = array(
 			'message' => 'You are not authorized to access this page.',
