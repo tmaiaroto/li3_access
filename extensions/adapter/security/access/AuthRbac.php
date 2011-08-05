@@ -24,7 +24,7 @@ class AuthRbac extends \lithium\core\Object {
 	 *
 	 * @param mixed $requester The user data array that holds all necessary information about
 	 *        the user requesting access. Or false (because Auth::check() can return false).
-	 *        This is an optional parameter, bercause we will fetch the users data trough Auth
+	 *        This is an optional parameter, because we will fetch the users data through Auth
 	 *        seperately.
 	 * @param object $request The Lithium Request object.
 	 * @param array $options An array of additional options for the _getRoles method.
@@ -81,7 +81,7 @@ class AuthRbac extends \lithium\core\Object {
 	/**
 	 * Matches the current request parameters against a set of given parameters. Can match
 	 * against a shorthand string (Controller::action) or a full array. If a parameter
-	 * is provided then it must have an equivilent in the Request objects parmeters in order
+	 * is provided then it must have an equivalent in the Request objects parmeters in order
 	 * to validate. * Is also acceptable to match a parameter without a specific value.
 	 *
 	 * @param mixed $match A set of parameters to validate the request against.

@@ -73,7 +73,7 @@ class Access extends \lithium\core\Adaptable {
 	 */
 	public static function check($name, $request, $requester = null, array $options = array()) {
 		$defaults = array(
-			'message' => 'You are not permitted to access this area.', 'redirect' => '/'
+			'message' => 'You are not authorized to access this page.', 'redirect' => '/'
 		);
 		$options += $defaults;
 

@@ -71,7 +71,7 @@ It's difficult to explain (I hope that's clear enough) so lets look at an exampl
 
 	$accountsEmpty = Accounts::count();
 
-	Access::config(
+	Access::config(array(
 		'auth_rbac' => array(
 			'adapter' => 'AuthRbac',
 			'roles' => array(
@@ -106,7 +106,7 @@ It's difficult to explain (I hope that's clear enough) so lets look at an exampl
 				)
 			)
 		)
-	)
+	));
 
 First we tell it which adapter to use:
 
@@ -118,7 +118,7 @@ Then we set the roles array. This array is required if you want to use this adap
 
 `'message'`
 
-Overwrites the default message to display if the rule matches the request and is dissallowed.
+Overwrites the default message to display if the rule matches the request and is disallowed.
 
 `'redirect'`
 
@@ -170,9 +170,9 @@ Setting `'requester' => array('user', 'customer')` would only apply the rule to 
 
 `'allow'`
 
-A boolean that if set to false forces a role that would have been granted access to deny access. Much like the 'match' option you can also pass a closure to this option. This way you can blacklist every requster and then whitelist requesters manualy. Also by passing a closure you can deny access based upon the request.
+A boolean that if set to false forces a role that would have been granted access to deny access. Much like the 'match' option you can also pass a closure to this option. This way you can blacklist every requester and then whitelist requesters manually. Also by passing a closure you can deny access based upon the request.
 
-Finally, if you pass either $request or $options you can modify thier values at runtime.
+Finally, if you pass either $request or $options you can modify their values at runtime.
 
 ###Filters
 
