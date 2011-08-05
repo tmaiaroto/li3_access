@@ -5,7 +5,7 @@
 Checkout the code to either of your library directories:
 
 	cd libraries
-	git clone git@github.com
+	git clone https://github.com/rich97/li3_access.git
 
 Include the library in in your `/app/config/bootstrap/libraries.php`
 
