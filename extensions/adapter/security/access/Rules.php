@@ -18,10 +18,10 @@ class Rules extends \lithium\core\Object {
 			'denyAll' => function() {
 				return false;
 			},
-			'allowAnyUser' => function($request, $requester) {
-				return !empty($requester);
+			'allowAnyUser' => function($resource, $request) {
+				return !empty($resource);
 			},
-			'allowIp' => function($request, $requester, $options) {
+			'allowIp' => function($resource, $request, $options) {
 				$options += array('ip' => false);
 				return $_SERVER['REMOTE_ADDR'] == $options['ip'];
 			}
@@ -36,13 +36,13 @@ class Rules extends \lithium\core\Object {
 	 * will need to be added to handle it. The default rules assume some
 	 * general cases and more can be added or passed directly to this method.
 	 *
-	 * @param mixed $requester The user data array that holds all necessary information about
+	 * @param mixed $resource The user data array that holds all necessary information about
 	 *        the user requesting access. Or false (because Auth::check() can return false).
 	 * @param object $request The Lithium Request object.
 	 * @param array $options An array of additional options.
 	 * @return Array An empty array if access is allowed and an array with reasons for denial if denied.
 	 */
-	public function check($request, $requester = false, array $options = array()) {
+	public function check($resource = null, $request, array $options = array()) {
 		$options += array('rules' => array());
 		if (empty($options['rules'])) {
 			return array('rule' => false, 'message' => $options['message'], 'redirect' => $options['redirect']);
@@ -61,10 +61,10 @@ class Rules extends \lithium\core\Object {
 				// The added rule closure will be passed the requester data
 				if (in_array($rule['rule'], array_keys(self::$_rules))) {
 					// The rule closure will be passed the requester, request and the rule array itself which could contain extra data required by the specific rule.
-					$rule_result = call_user_func(self::$_rules[$rule['rule']], $request, $requester, $rule);
+					$rule_result = call_user_func(self::$_rules[$rule['rule']], $resource, $request, $rule);
 				} elseif (is_callable($rule['rule'])) {
 					// The rule can be defined as a closure on the fly, no need to call add()
-					$rule_result = call_user_func($rule['rule'], $request, $requester, $rule);
+					$rule_result = call_user_func($rule['rule'], $resource, $request, $rule);
 				}
 
 				if($rule_result === false) {
@@ -83,7 +83,7 @@ class Rules extends \lithium\core\Object {
 	/**
 	 * Adds an Access rule. This works much like the Validator class.
 	 * All rules should be anonymous functions and will be passed
-	 * $request, $requester, and $options which will contain the entire
+	 * $request, $resource, and $options which will contain the entire
 	 * rule array which contains its own name plus other data that
 	 * could be used to determine access.
 	 *

@@ -41,11 +41,11 @@ class AuthRbacTest extends \lithium\test\Unit {
 				'adapter' => 'AuthRbac',
 				'roles' => array(
 					array(
-						'requesters' => 'user',
+						'resources' => 'user',
 						'match' => '*::*'
 					),
 					array(
-						'requesters' => 'user',
+						'resources' => 'user',
 						'match' => 'Pages::index'
 					)
 				)
@@ -54,7 +54,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 				'adapter' => 'AuthRbac',
 				'roles' => array(
 					array(
-						'requesters' => '*',
+						'resources' => '*',
 						'allow' => array(function($request, &$roleOptions) {
 							$roleOptions['message'] = 'Test allow options set.';
 							return $request->params['allow'];
@@ -74,7 +74,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 				'roles' => array(
 					array(
 						'allow' => false,
-						'requesters' => '*',
+						'resources' => '*',
 						'match' => '*::*'
 					),
 					array(
@@ -83,7 +83,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 						'options' => array(
 							'class' => 'notice'
 						),
-						'requesters' => 'user',
+						'resources' => 'user',
 						'match' => 'TestControllers::test_action'
 					),
 					array(
@@ -104,18 +104,18 @@ class AuthRbacTest extends \lithium\test\Unit {
 				'class' => 'error'
 			)
 		);
-		$result = Access::check('test_check', $this->_request, false);
+		$result = Access::check('test_check', null, $this->_request);
 		$this->assertIdentical($expected, $result);
 
 		$expected = array();
-		$user = array('username' => 'test');
-		$result = Access::check('test_check', $this->_request, $user);
+		$resource = array('username' => 'test');
+		$result = Access::check('test_check', $resource, $this->_request);
 		$this->assertIdentical($expected, $result);
 	}
 
 	public function testRoles() {
 		$this->expectException('No roles defined for adapter configuration.');
-		Access::check('no_roles', $this->_request);
+		Access::check('no_roles', null, $this->_request);
 	}
 
 	public function testClosures() {
@@ -123,7 +123,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 
 		$request->params['allow'] = $request->params['match'] = true;
 		$expected = array();
-		$result = Access::check('test_closures', $request, false);
+		$result = Access::check('test_closures', null, $request);
 		$this->assertIdentical($expected, $result);
 
 		$request->params['allow'] = false;
@@ -134,7 +134,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 				'class' => 'error'
 			)
 		);
-		$result = Access::check('test_closures', $request, false);
+		$result = Access::check('test_closures', null, $request);
 		$this->assertIdentical($expected, $result);
 
 		$request->params['allow'] = true;
@@ -146,14 +146,14 @@ class AuthRbacTest extends \lithium\test\Unit {
 				'class' => 'error'
 			)
 		);
-		$result = Access::check('test_closures', $request, false);
+		$result = Access::check('test_closures', null, $request);
 		$this->assertIdentical($expected, $result);
 
 		$roles = array(array(
 			'match' => '*::*',
 			'allow' => 'bad_closure'
 		));
-		$result = Access::check('test_closures', $request, false, compact('roles'));
+		$result = Access::check('test_closures', null, $request, compact('roles'));
 		$this->assertIdentical($expected, $result);
 	}
 
@@ -168,17 +168,17 @@ class AuthRbacTest extends \lithium\test\Unit {
 		$roles = array(array(
 			'match' => array('Pages::index')
 		));
-		$result = Access::check('no_roles', $this->_request, false, compact('roles'));
+		$result = Access::check('no_roles', null, $this->_request, compact('roles'));
 		$this->assertIdentical($expected, $result);
 	}
 
 	public function testRoleOverride() {
 		$expected = array();
-		$result = Access::check('no_roles', $this->_request, false, array(
+		$result = Access::check('no_roles', null, $this->_request, array(
 			'roles' => array(
 				array(
 					'match' => '*::*',
-					'requesters' => '*'
+					'resources' => '*'
 				)
 			)
 		));
@@ -193,7 +193,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 				'class' => 'notice'
 			)
 		);
-		$result = Access::check('test_option_override', $this->_request, false, array('whatt'));
+		$result = Access::check('test_option_override', null, $this->_request, array('whatt'));
 		$this->assertIdentical($expected, $result);
 	}
 }

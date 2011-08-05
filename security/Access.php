@@ -66,12 +66,12 @@ class Access extends \lithium\core\Adaptable {
 	 *
 	 * @param string $name The name of the `Access` configuration/adapter to check against.
 	 * @param object $request A Lithium Request object.
-	 * @param mixed $requester The user data that holds all necessary information about
+	 * @param mixed $resource The user data that holds all necessary information about
 	 *        the user requesting access. Or `false` (because Auth::check() can return `false`).
 	 * @param array $options An array of additional options.
 	 * @return Array An empty array if access is allowed and an array with reasons for denial if denied.
 	 */
-	public static function check($name, $request, $requester = null, array $options = array()) {
+	public static function check($name, $resource = null, $request, array $options = array()) {
 		$defaults = array(
 			'message' => 'You are not authorized to access this page.', 'redirect' => '/'
 		);
@@ -81,13 +81,12 @@ class Access extends \lithium\core\Adaptable {
 			throw new ConfigException("Configuration `{$name}` has not been defined.");
 		}
 		$filter = function($self, $params) use ($name) {
-			return $self::adapter($name)->check($params['request'], $params['requester'], $params['options']);
+			return $self::adapter($name)->check($params['resource'], $params['request'], $params['options']);
 		};
 		$filters = (array) $config['filters'];
-		$params = compact('request', 'requester', 'options');
+		$params = compact('resource', 'request', 'options');
 		return static::_filter(__FUNCTION__, $params, $filter, $filters);
 	}
-
 }
 
 ?>

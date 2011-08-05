@@ -28,11 +28,11 @@ class SimpleTest extends \lithium\test\Unit {
 		$request = new Request();
 
 		$expected = array();
-		$result = Access::check('test_access', $request, array('username' => 'Tom'));
+		$result = Access::check('test_access', array('username' => 'Tom'), $request);
 		$this->assertEqual($expected, $result);
 
 		$expected = array('message' => 'Access denied.', 'redirect' => '/login');
-		$result = Access::check('test_access', $request, false, array('redirect' => '/login', 'message' => 'Access denied.'));
+		$result = Access::check('test_access', null, $request, array('redirect' => '/login', 'message' => 'Access denied.'));
 		$this->assertEqual($expected, $result);
 	}
 

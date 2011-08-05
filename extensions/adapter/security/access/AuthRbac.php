@@ -22,7 +22,7 @@ class AuthRbac extends \lithium\core\Object {
 	/**
 	 * The `Rbac` adapter will iterate trough the rbac data Array.
 	 *
-	 * @param mixed $requester The user data array that holds all necessary information about
+	 * @param mixed $resource The user data array that holds all necessary information about
 	 *        the user requesting access. Or false (because Auth::check() can return false).
 	 *        This is an optional parameter, because we will fetch the users data through Auth
 	 *        seperately.
@@ -30,7 +30,7 @@ class AuthRbac extends \lithium\core\Object {
 	 * @param array $options An array of additional options for the _getRoles method.
 	 * @return Array An empty array on success. Array with message and redirect params on failure.
 	 */
-	public function check($request, $requester = false, array $options = array()) {
+	public function check($resource = null, $request, array $options = array()) {
 		if (!empty($options['roles'])) {
 			$this->_roles = $options['roles'];
 		}
@@ -44,15 +44,15 @@ class AuthRbac extends \lithium\core\Object {
 			'message' => '',
 			'redirect' => '',
 			'allow' => true,
-			'requesters' => '*',
+			'resources' => '*',
 			'match' => '*::*',
 			'options' => array()
 		);
 
 		extract($options);
 
-		if (empty($request->data) && $requester) {
-			$request->data = $requester;
+		if (empty($request->data) && $resource) {
+			$request->data = $resource;
 		}
 
 		$allow = false;
@@ -65,7 +65,7 @@ class AuthRbac extends \lithium\core\Object {
 			$allow = false;
 
 			$roles = $this->_roles($request);
-			$accessable = $this->_accessable($role['requesters'], $roles, $options);
+			$accessable = $this->_accessable($role['resources'], $roles, $options);
 			$allow = $this->_run($role['allow'], $request, $role) && $accessable;
 
 			if (!$allow) {
@@ -149,20 +149,20 @@ class AuthRbac extends \lithium\core\Object {
 	/**
 	 * Compares the results from _roles with the array passed to it.
 	 *
-	 * @param mixed $requesters
+	 * @param mixed $resources
 	 * @param mixed $request
 	 * @param array $options
 	 * @access protected
 	 * @return void
 	 */
-	protected function _accessable($requesters, $roles, array $options = array()) {
-		$requesters = (array) $requesters;
-		if (in_array('*', $requesters)) {
+	protected function _accessable($resources, $roles, array $options = array()) {
+		$resources = (array) $resources;
+		if (in_array('*', $resources)) {
 			return true;
 		}
 
-		foreach ($requesters as $requester) {
-			if (array_key_exists($requester, $roles)) {
+		foreach ($resources as $resource) {
+			if (array_key_exists($resource, $roles)) {
 				return true;
 			}
 		}

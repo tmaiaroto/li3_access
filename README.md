@@ -76,17 +76,17 @@ It's difficult to explain (I hope that's clear enough) so lets look at an exampl
 			'adapter' => 'AuthRbac',
 			'roles' => array(
 				array(
-					'requesters' => '*',
+					'resources' => '*',
 					'match' => '*::*'
 				),
 				array(
 					'message' => 'No panel for you!',
 					'redirect' => array('library' => 'admin', 'Users::login'),
-					'requesters' => 'admin',
+					'resources' => 'admin',
 					'match' => array('library' => 'admin', '*::*')
 				),
 				array(
-					'requesters' => '*',
+					'resources' => '*',
 					'match' => array(
 						'library' => 'admin', 'Users::login',
 						function($request, &$options) {
@@ -101,7 +101,7 @@ It's difficult to explain (I hope that's clear enough) so lets look at an exampl
 					}
 				),
 				array(
-					'requesters' => '*',
+					'resources' => '*',
 					'match' => array('library' => 'admin', 'Users::logout')
 				)
 			)
@@ -139,7 +139,7 @@ In the closure example configuration:
 
 Not only must the library, controller and action match but the closure must return true. So this role will only apply to this request if all of the request params match and the request data is set.
 
-`'requester'`
+`'resources'`
 
 A string or an array of auth configuration keys that this rule applies to. The string `*` denotes everyone, even those who are not authenticated. A string of `admin` will validate anyone who can be authenticated against the user defined `admin` Auth configuration. An array of configuration keys does the same but you can apply it to multiple Auth configurations in one go.
 
@@ -166,11 +166,11 @@ Assuming we have an Auth configuration like so:
     	)
     ));
 
-Setting `'requester' => array('user', 'customer')` would only apply the rule to anyone that could authenticate as a user or customer. Setting `'requester' => '*'` would mean that all of these auth configurations and people that are not authenticated would have this role applied to them.
+Setting `'resources' => array('user', 'customer')` would only apply the rule to anyone that could authenticate as a user or customer. Setting `'resource' => '*'` would mean that all of these auth configurations and people that are not authenticated would have this role applied to them.
 
 `'allow'`
 
-A boolean that if set to false forces a role that would have been granted access to deny access. Much like the 'match' option you can also pass a closure to this option. This way you can blacklist every requester and then whitelist requesters manually. Also by passing a closure you can deny access based upon the request.
+A boolean that if set to false forces a role that would have been granted access to deny access. Much like the 'match' option you can also pass a closure to this option. This way you can blacklist every resource and then whitelist resources manually. Also by passing a closure you can deny access based upon the request.
 
 Finally, if you pass either $request or $options you can modify their values at runtime.
 

@@ -17,8 +17,8 @@ class Simple extends \lithium\core\Object {
 	 * @param array $options An array of additional options.
 	 * @return Array An empty array if access is allowed and an array with reasons for denial if denied.
 	 */
-	public function check($request, $requester, array $options = array()) {
-		return !$requester ? $options : array();
+	public function check($resource, $request, array $options = array()) {
+		return !$resource ? $options : array();
 	}
 }
 
