@@ -55,7 +55,7 @@ class RulesTest extends \lithium\test\Unit {
         $this->assertEqual($expected, $result);
 
         // No rules
-        $expected = array('rule' => false, 'message' => 'You are not permitted to access this area.', 'redirect' => '/');
+        $expected = array('rule' => false, 'message' => 'You are not authorized to access this page.', 'redirect' => '/');
         $result = Access::check('test_rulebased', $request, array('username' => 'Tom'));
         $this->assertEqual($expected, $result);
 

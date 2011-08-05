@@ -102,7 +102,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 
 	public function testCheck() {
 		$expected = array(
-			'message' => 'You are not permitted to access this area.',
+			'message' => 'You are not authorized to access this page.',
 			'redirect' => '/',
 			'options' => array(
 				'class' => 'error'
@@ -144,7 +144,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 		$request->params['allow'] = true;
 		$request->params['match'] = false;
 		$expected = array(
-			'message' => 'You are not permitted to access this area.',
+			'message' => 'You are not authorized to access this page.',
 			'redirect' => '/',
 			'options' => array(
 				'class' => 'error'
@@ -163,7 +163,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 
 	public function testNoMatch() {
 		$expected = array(
-			'message' => 'You are not permitted to access this area.',
+			'message' => 'You are not authorized to access this page.',
 			'redirect' => '/',
 			'options' => array(
 				'class' => 'error'
