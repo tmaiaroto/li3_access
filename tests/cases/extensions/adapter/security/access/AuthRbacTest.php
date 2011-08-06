@@ -19,6 +19,8 @@ class AuthRbacTest extends \lithium\test\Unit {
 	protected $_request;
 
 	public function setUp() {
+		Auth::clear('user');
+
 		$this->_request = new Request(array(
 			'params' => array(
 				'library' => 'test_library',
