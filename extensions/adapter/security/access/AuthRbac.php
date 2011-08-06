@@ -3,16 +3,15 @@
 namespace li3_access\extensions\adapter\security\access;
 
 use lithium\security\Auth;
+use lithium\util\Inflector;
 use lithium\core\ConfigException;
-
-use li3_access\security\Access;
 
 class AuthRbac extends \lithium\core\Object {
 
-    /**
-     * @var array $_autoConfig
-     * @see lithium\core\Object::$_autoConfig
-     */
+	/**
+	 * @var array $_autoConfig
+	 * @see lithium\core\Object::$_autoConfig
+	 */
 	protected $_autoConfig = array('roles');
 
 	/**
@@ -23,173 +22,183 @@ class AuthRbac extends \lithium\core\Object {
 	/**
 	 * The `Rbac` adapter will iterate trough the rbac data Array.
 	 *
-	 * @param mixed $user The user data array that holds all necessary information about
+	 * @param mixed $resource The user data array that holds all necessary information about
 	 *        the user requesting access. Or false (because Auth::check() can return false).
-	 *        This is an optional parameter, bercause we will fetch the users data trough Auth
+	 *        This is an optional parameter, because we will fetch the users data through Auth
 	 *        seperately.
 	 * @param object $request The Lithium Request object.
-	 * @param array $options An array of additional options for the _getRolesByAuth method.
-	 * @return Array An empty array if access is allowed and an array with reasons for denial if denied.
+	 * @param array $options An array of additional options for the _getRoles method.
+	 * @return Array An empty array on success. Array with message and redirect params on failure.
 	 */
-    public function check($requester, $request, array $options = array()) {
-        if (empty($this->_roles)) {
-            throw new ConfigException('No roles defined for adapter configuration.');
-        }
+	public function check($resource = null, $request, array $options = array()) {
+		if (!empty($options['roles'])) {
+			$this->_roles = $options['roles'];
+		}
 
-        $roleDefaults = array(
-            'message' => '',
-            'redirect' => '',
-            'allow' => true,
-            'requesters' => '*',
-            'match' => '*::*'
-        );
+		if (empty($this->_roles)) {
+			throw new ConfigException('No roles defined for adapter configuration.');
+		}
 
-        $message = $options['message'];
-        $redirect = $options['redirect'];
+		$options += array('options' => array('class' => 'error'));
+		$defaults = array(
+			'message' => '',
+			'redirect' => '',
+			'allow' => true,
+			'resources' => '*',
+			'match' => '*::*',
+			'options' => array()
+		);
 
-        $accessable = false;
-        foreach ($this->_roles as $role) {
-            $role += $roleDefaults;
+		extract($options);
 
-            // Check to see if this role applies to this request
-            if (!static::parseMatch($role['match'], $request)) {
-                continue;
-            }
-            $accessable = true;
+		if (empty($request->data) && $resource) {
+			$request->data = $resource;
+		}
 
-            if (($role['allow'] === false) ||
-                (!static::_hasRole($role['requesters'], $request, $options)) ||
-                (is_array($role['allow']) && !static::_parseClosures($role['allow'], $request, $role))
-            ) {
-                $accessable = false;
-            }
+		$allow = false;
+		foreach ($this->_roles as $role) {
+			$role += $defaults;
 
-            if (!$accessable) {
-                $message = !empty($role['message']) ? $role['message'] : $message;
-                $redirect = !empty($role['redirect']) ? $role['redirect'] : $redirect;
-            }
-        }
+			if ($this->_match($role['match'], $request) === false) {
+				continue;
+			}
+			$allow = false;
 
-        return !$accessable ? compact('message', 'redirect') : array();
-    }
+			$roles = $this->_roles($request);
+			$accessable = $this->_accessable($role['resources'], $roles, $options);
+			$allow = $this->_run($role['allow'], $request, $role) && $accessable;
 
-    /**
-     * parseMatch Matches the current request parameters against a set of given parameters.
-     * Can match against a shorthand string (Controller::action) or a full array. If a parameter
-     * is provided then it must have an equivilent in the Request objects parmeters in order
-     * to validate. * Is also acceptable to match a parameter without a specific value.
-     *
-     * @param mixed $match A set of parameters to validate the request against.
-     * @param mixed $request A lithium Request object.
-     * @access public
-     * @return boolean True if a match is found.
-     */
-    public static function parseMatch($match, $request) {
-        if (empty($match)) {
-            return false;
-        }
+			if (!$allow) {
+				$message = !empty($role['message']) ? $role['message'] : $message;
+				$redirect = !empty($role['redirect']) ? $role['redirect'] : $redirect;
+				$options = !empty($role['options']) ? $role['options'] : $options;
+			}
+		}
 
-        if (is_array($match)) {
-            if (!static::_parseClosures($match, $request)) {
-                return false;
-            }
-        }
+		return !$allow ? compact('message', 'redirect', 'options') : array();
+	}
 
-        $params = array();
-        foreach ((array) $match as $key => $param) {
-            if (is_string($param)) {
-                if (preg_match('/^[A-Za-z0-9_\*]+::[A-Za-z0-9_\*]+$/', $param, $regexMatches)) {
-                    list($controller, $action) = explode('::', reset($regexMatches));
-                    $params += compact('controller', 'action');
-                    continue;
-                }
-            }
+	/**
+	 * Matches the current request parameters against a set of given parameters. Can match
+	 * against a shorthand string (Controller::action) or a full array. If a parameter
+	 * is provided then it must have an equivalent in the Request objects parmeters in order
+	 * to validate. * Is also acceptable to match a parameter without a specific value.
+	 *
+	 * @param mixed $match A set of parameters to validate the request against.
+	 * @param mixed $request A lithium Request object.
+	 * @access public
+	 * @return boolean True if a match is found.
+	 */
+	protected function _match($match, $request) {
+		if (empty($match)) {
+			return false;
+		}
 
-            $params[$key] = $param;
-        }
+		if (is_array($match)) {
+			if (!$this->_run($match, $request)) {
+				return false;
+			}
+		}
 
-        foreach ($params as $type => $value) {
-            if ($value === '*') {
-                continue;
-            }
+		$params = array();
+		foreach ((array) $match as $key => $param) {
+			if (is_string($param)) {
+				if (preg_match('/^[A-Za-z0-9_\*]+::[A-Za-z0-9_\*]+$/', $param, $regexMatches)) {
+					list($controller, $action) = explode('::', reset($regexMatches));
+					$params += compact('controller', 'action');
+					continue;
+				}
+			}
 
-            if ($type === 'controller') {
-                $value = \lithium\util\Inflector::underscore($value);
-            }
+			$params[$key] = $param;
+		}
 
-            if (!array_key_exists($type, $request->params) || $value !== $request->params[$type]) {
-                return false;
-            }
-        }
+		foreach ($params as $type => $value) {
+			if ($value === '*') {
+				continue;
+			}
 
-        return true;
-    }
+			if ($type === 'controller') {
+				$value = Inflector::underscore($value);
+			}
 
-    /**
-     * _parseClosures Itterates over an array and runs any anonymous functions it
-     * finds. Returns true if all of the closures it runs evaluate to true. $match
-     * is passed by refference and any closures found are removed from it before the
-     * method is complete.
-     *
-     * @param array $data
-     * @param mixed $request
-     * @static
-     * @access protected
-     * @return void
-     */
-    protected static function _parseClosures(array &$data = array(), $request = null, array &$roleOptions = array()) {
-        $return = true;
-        foreach ($data as $key => $item) {
-            if (is_callable($item)) {
-                if ($return === true) {
-                    $return = (boolean) $item($request, $roleOptions);
-                }
-                unset($data[$key]);
-            }
-        }
-        return $return;
-    }
+			if (!array_key_exists($type, $request->params) || $value !== $request->params[$type]) {
+				return false;
+			}
+		}
+
+		return true;
+	}
 
 	/**
 	 * @todo reduce Model Overhead (will duplicated in each model)
 	 *
 	 * @param Request $request Object
-	 * @return array|mixed $roles Roles with attachted User Models
+	 * @return array|mixed $roles Roles with attached User Models
 	 */
-	protected static function _getRolesByAuth($request, array $options = array()){
+	protected function _roles($request, array $options = array()) {
 		$roles = array('*' => '*');
-		foreach (array_keys(Auth::config()) as $key){
-            if ($check = Auth::check($key, $request, $options)) {
-			    $roles[$key] = $check;
-            }
+		foreach (array_keys(Auth::config()) as $key) {
+			if ($check = Auth::check($key, $request, $options)) {
+				$roles[$key] = $check;
+			}
 		}
 		return $roles = array_filter($roles);
 	}
 
-    /**
-     * _hasRole Compares the results from _getRolesByAuth with the array passed to it.
-     *
-     * @param mixed $requesters
-     * @param mixed $request
-     * @param array $options
-     * @access protected
-     * @return void
-     */
-    protected function _hasRole($requesters, $request, array $options = array()) {
-        $authed = array_keys(static::_getRolesByAuth($request, $options));
+	/**
+	 * Compares the results from _roles with the array passed to it.
+	 *
+	 * @param mixed $resources
+	 * @param mixed $request
+	 * @param array $options
+	 * @access protected
+	 * @return void
+	 */
+	protected function _accessable($resources, $roles, array $options = array()) {
+		$resources = (array) $resources;
+		if (in_array('*', $resources)) {
+			return true;
+		}
 
-        $requesters = (array) $requesters;
-        if (in_array('*', $requesters)) {
-            return true;
-        }
+		foreach ($resources as $resource) {
+			if (array_key_exists($resource, $roles)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-        foreach ($requesters as $requester) {
-            if (in_array($requester, $authed)) {
-                return true;
-            }
-        }
-        return false;
-    }
+	/**
+	 * Itterates over an array and runs any anonymous functions it finds. Returns
+	 * true if all of the closures it runs evaluate to true. $match is passed by
+	 * reference and any closures found are removed from it before the method is complete.
+	 *
+	 * @param array $data
+	 * @param mixed $request
+	 * @access protected
+	 * @return void
+	 */
+	protected function _run(&$data, $request = null, array &$options = array()) {
+		if (is_bool($data)) {
+			return $data;
+		}
+
+		if (!is_array($data)) {
+			return false;
+		}
+
+		$allow = true;
+		foreach ($data as $key => $item) {
+			if (is_callable($item)) {
+				if ($allow === true) {
+					$allow = (boolean) $item($request, $options);
+				}
+				unset($data[$key]);
+			}
+		}
+		return $allow;
+	}
 
 }
 

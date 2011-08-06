@@ -11,14 +11,14 @@ class Simple extends \lithium\core\Object {
 	 * The `Simple` adapter will just check for user data.
 	 * It doesn't care about anything else.
 	 *
-	 * @param mixed $user The user data array that holds all necessary information about
+	 * @param mixed $requester The user data array that holds all necessary information about
 	 *        the user requesting access. Or false (because Auth::check() can return false).
 	 * @param object $request The Lithium Request object.
 	 * @param array $options An array of additional options.
 	 * @return Array An empty array if access is allowed and an array with reasons for denial if denied.
 	 */
-	public function check($user, $request, array $options = array()) {
-		return !$user ? $options : array();
+	public function check($resource, $request, array $options = array()) {
+		return !$resource ? $options : array();
 	}
 }
 
