@@ -10,23 +10,21 @@
 namespace li3_access\extensions\adapter\security\access;
 
 use lithium\security\Auth;
-use li3_access\security\Access;
-
 use lithium\core\ConfigException;
 use lithium\g11n\Message;
-
-use li3_access\models\acl\Acos;
-use li3_access\models\acl\Aros;
-use li3_access\models\acl\Permissions;
+use li3_access\extensions\adapter\security\access\acl\db\Acos;
+use li3_access\extensions\adapter\security\access\acl\db\Aros;
+use li3_access\extensions\adapter\security\access\acl\db\Permissions;
+use li3_access\security\Access;
 
 class Acl extends \lithium\core\Object {
-
+	
 	/**
 	 * Holds all permission of $requester
-	 * @var type
+	 * @var type 
 	 */
 	private $_permissions = array();
-
+	
 	/**
 	 * The `Rbac` adapter will iterate trough the rbac data Array.
 	 *
@@ -46,22 +44,22 @@ class Acl extends \lithium\core\Object {
 		);
 		$options = array_merge($defaultOptions,$options);
 		if(!empty($requester)){
-			//$requester	Array [10]
-			//	id	(string:4) 6317
-			//	login	(string:3) ab2
-			//	password	(string:32) a8eb58dbcd6a613056c578d3c3b0f97c
-			//	name	(string:7) Andrzej
-			//	surname	(string:9) Borkowski
-			//	agent	(string:4) 1110
-			//	email	null
-			//	telephone_number	null
-			//	password_expired	(string:29) 2020-03-30 09:25:27.823536+02
+			//$requester	Array [10]	
+			//	id	(string:4) 6317	
+			//	login	(string:3) ab2	
+			//	password	(string:32) a8eb58dbcd6a613056c578d3c3b0f97c	
+			//	name	(string:7) Andrzej	
+			//	surname	(string:9) Borkowski	
+			//	agent	(string:4) 1110	
+			//	email	null	
+			//	telephone_number	null	
+			//	password_expired	(string:29) 2020-03-30 09:25:27.823536+02	
 			//	role_id	(string:1) 5
 			$model = isset($this->_config['credentials']['model']) ? $this->_config['credentials']['model'] : null;
 			if(!empty($model)){
 				$requester = array($model => $requester);
 			}
-
+		
 			if($check = self::_check($requester, $request, $options)){
 				return array('check'=> $check) + $options;
 			}
@@ -89,12 +87,12 @@ class Acl extends \lithium\core\Object {
 		$acoPath = Acos::node($aco);
 
 		if (empty($aroPath) || empty($acoPath)) {
-			throw new \Exception("Access::check() - Failed ARO/ACO node lookup in permissions check.  Node references:\nAro: " . print_r($aro, true) . "\nAco: " . print_r($aco, true));
+			throw new \Exception("Auth\Acl::check() - Failed ARO/ACO node lookup in permissions check.  Node references:\nAro: " . print_r($aro, true) . "\nAco: " . print_r($aco, true));
 			return false;
 		}
 
 		if ($acoPath == null || $acoPath == array()) {
-			throw new \Exception("Access::check() - Failed ACO node lookup in permissions check.  Node references:\nAro: " . print_r($aro, true) . "\nAco: " . print_r($aco, true));
+			throw new \Exception("Auth\Acl::check() - Failed ACO node lookup in permissions check.  Node references:\nAro: " . print_r($aro, true) . "\nAco: " . print_r($aco, true));
 			return false;
 		}
 
@@ -114,13 +112,13 @@ class Acl extends \lithium\core\Object {
 			$permAlias = $this->Aro->Permission->alias;
 
 			$perms = $this->Aro->Permission->find('all', array(
-				'conditions' => array(
-					"{$permAlias}.aro_id" => $aroPath[$i][$this->Aro->alias]['id'],
-					"{$permAlias}.aco_id" => $acoIDs
-				),
-				'order' => array($this->Aco->alias . '.lft' => 'desc'),
-				'recursive' => 0
-			));
+									'conditions' => array(
+											"{$permAlias}.aro_id" => $aroPath[$i][$this->Aro->alias]['id'],
+											"{$permAlias}.aco_id" => $acoIDs
+									),
+									'order' => array($this->Aco->alias . '.lft' => 'desc'),
+									'recursive' => 0
+							));
 
 			if (empty($perms)) {
 				continue;
@@ -180,7 +178,7 @@ class Acl extends \lithium\core\Object {
 	 * @return void
 	 */
 	public function clear(array $options = array()) {
-
+		
 	}
 
 }

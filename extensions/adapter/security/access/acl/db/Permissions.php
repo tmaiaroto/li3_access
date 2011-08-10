@@ -1,10 +1,10 @@
 <?php
-namespace li3_access\extensions\models\acl;
+namespace li3_access\extensions\adapter\security\access\acl\db;
 //use \lithium\util\String;
 //use lithium\security\Password;
 
-class Permissions extends \li3_access\extensions\models\Acl {
-
+class Permissions extends \li3_access\extensions\adapter\security\access\acl\Acl {
+	
 /**
  * Override default `_meta` options
  *
