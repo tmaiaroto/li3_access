@@ -1,5 +1,5 @@
 <?php
-namespace li3_access\extensions\adapter\security\access\acl;
+namespace li3_access\extensions\models;
 
 //use lithium\core\Libraries;
 //use UnexpectedValueException;
@@ -8,7 +8,18 @@ use lithium\core\Libraries;
 use lithium\core\ClassNotFoundException;
 use lithium\data\Connections;
 
-class Acl extends \lithium\data\Model {
+class Acl extends \li3_tree\extensions\Model {
+
+	/**
+	 * __init()
+	 *
+	 * applies Tree Behaviour to Model
+	 */
+	public static function __init() {
+		parent::__init();
+		$class = get_called_class();
+		static::applyBehavior($class);
+	}
 
 /**
  * Retrieves the Aro/Aco node for this model
@@ -97,8 +108,8 @@ class Acl extends \lithium\data\Model {
 				throw new ClassNotFoundException(sprintf("Model class '%s' not found in access\acl\Acl::node() when trying to bind %s object", $model, $type));
 				return null;
 			}
-		
-			//$model	null	
+
+			//$model	null
 			$tmpRef = null;
 			if (method_exists($model, 'bindNode')) {
 				// @link http://book.cakephp.org/view/1547/Acts-As-a-Requester#x11-2-4-1-Group-only-ACL-1646
@@ -139,29 +150,7 @@ class Acl extends \lithium\data\Model {
 				)),
 				'order' => $db->name("{$type}.lft") . ' DESC'
 			);
-			//$queryData	Array [4]	
-			//	conditions	Array [2]	
-			//	fields	Array [5]	
-			//	joins	Array [1]	
-			//		0	Array [4]	
-			//			source	(string:4) aros	
-			//			alias	(string:5) Aros0	
-			//			type	(string:4) LEFT	
-			//			constraint	Array [2]	
-			//				Aros.lft	Array [1]	
-			//					 <= 	(string:9) Aros0.lft	
-			//				Aros.rght	Array [1]	
-			//					 <= 	(string:10) Aros0.rght	
-			//	order	(string:17) "Aros"."lft" DESC
-			
 			$result = self::find('first', $queryData);
-			// exception 'lithium\data\model\QueryException' with message
-			// 'SQL: SELECT Aros.id, Aros.parent_id, Aros.model, Aros.foreign_key, Aros.alias 
-			// FROM "aros" AS "Aros" 
-			// LEFT JOIN AS "Aros0" 
-			// WHERE "Aros0"."model" = 'Users' AND "Aros0"."foreign_key" = 6317 
-			// ORDER BY "Aros"."lft" DESC LIMIT 1; 
-			// ERROR: syntax error at or near "AS" at character 106' 
 			if (!$result) {
 				throw new \Exception(sprintf(__("AclNode::node() - Couldn't find %s node identified by \"%s\"", true), $type, print_r($ref, true)));
 			}

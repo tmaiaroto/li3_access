@@ -1,9 +1,9 @@
 <?php
-namespace li3_access\extensions\adapter\security\access\acl\db;
+namespace li3_access\extensions\models\acl;
 //use \lithium\util\String;
 //use lithium\security\Password;
 
-class Acos extends \li3_access\extensions\adapter\security\access\acl\Acl {
+class Acos extends \li3_access\extensions\models\Acl {
 
 	protected $_meta = array('source' => 'acos');
 
