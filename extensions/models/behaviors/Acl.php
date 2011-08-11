@@ -16,7 +16,12 @@ class Acl extends \lithium\data\Model {
 	protected static $_defaults = array(
 		'typeMaps' => array(
 			'requester' => 'Aros', 'controlled' => 'Acos'
-		)
+		),
+//		'fields' => array(
+//			'parnet_id' => 'parent_id',
+//			'foreign_key' => 'foreign_key',
+//			'model' => 'model'
+//		)
 	);
 
 	/**
@@ -24,7 +29,6 @@ class Acl extends \lithium\data\Model {
 	 * @var Array holding Arrays of Configuration Arrays
 	 */
 	protected static $_config = array();
-
 	/**
 	 * applyBehavior
 	 *
@@ -32,85 +36,88 @@ class Acl extends \lithium\data\Model {
 	 *
 	 * @param \lithium\data\Model $self The Model using this behaviour
 	 */
-	public static function applyBehavior($self, $config = array('li3_access' => array())) {
-		//parent::applyBehavior($self, $config);
+	public static function applyBehavior($self, $config = array()) {
+		static::$_config[$self] = array_merge(static::$_defaults, $config);
+		//static::$_config[$self]['type'] = strtolower(static::$_config[$self]['type']);
 
-		static::$_config[$self] = array_merge(static::$_defaults, $config['li3_access']);
+		//$type = static::$_defaults['typeMaps'][static::$_config[$self]['type']];
 
-		/**
-		 * Creates a new ARO/ACO node bound to this record
-		 *
-		 * @param boolean $created True if this is a new record
-		 * @return void
-		 * @access public
-		 */
 		static::applyFilter('save', function($self, $params, $chain) {
-			//beforeSave
-			extract(static::$_config[$self]);
-			$entity = $params['entity'];
-			//$this->[$model->name]['type']
-			exit(var_dump($self));
-			$type = $this->_config['type'];
-
-			if (!$entity->data('id')) {
-				//new
-			}else{
-				//overwrite
-			}
-
 			$save = $chain->next($self, $params, $chain);
-
-			//afterSave
-			$parent = $model->parentNode();
-			if (!empty($parent)) {
-			$parent = $this->node($model, $parent);
-			}
-			$data = array(
-			'parent_id' => isset($parent[0][$type]['id']) ? $parent[0][$type]['id'] : null,
-			 'model' => $model->alias,
-			 'foreign_key' => $model->id
-			);
-			//if (!$created) {
-			if(!$entity->data('id')){
-				$node = $this->node($model);
-				$data['id'] = isset($node[0][$type]['id']) ? $node[0][$type]['id'] : null;
-			}
-			$model->{$type}->create();
-			$model->{$type}->save($data);
-
-			//afterSave
+			$self::afterSave($self, $params, $save);
 			return $save;
 		});
 
-		/**
-		 * Destroys the ARO/ACO node bound to the deleted record
-		 *
-		 * @return void
-		 * @access public
-		 */
 		static::applyFilter('delete', function($self, $params, $chain) {
-			$type = $this->__typeMaps[$this->settings[$model->name]['type']];
-			$node = Set::extract($this->node($model), "0.{$type}.id");
-
 			$delete = $chain->next($self, $params, $chain);
-
-			if (!empty($node)) {
-				$model->{$type}->delete($node);
-			}
+			$self::afterDelete($self, $params, $delete);
 			return $delete;
 		});
 	}
 
 	/**
- * Retrieves the Aro/Aco node for this model
- *
- * @param mixed $ref
- * @return array
- * @access private
- * @link http://book.cakephp.org/view/1322/node
- */
-	private static function _node($self,$ref = null){
+	 * Creates a new ARO/ACO node bound to this record
+	 *
+	 * @return void
+	 * @access public
+	 */
+	static public function afterSave($self, $params, $save) {
+		extract(static::$_config[$self]);
+		$entity = $params['entity'];
+		$type = static::$_defaults['typeMaps'][$type]; // Aro, Aco
+		$parent = $self::parentNode($entity);
+		if (!empty($parent)) {
+			$parent = $self::node($self, $parent);
+		}
+		$data = array(
+			'parent_id' => isset($parent[$type]['id']) ? $parent[$type]['id'] : null,
+			//'model' => $model->alias,
+			'model' => $self::_name(),
+			//'foreign_key' => $model->id
+			'foreign_key' => $entity->data('id')
+		);
 
+		if ($entity->exists()) {
+			$node = $self::node($self);
+			$data['id'] = isset($node[0][$type]['id']) ? $node[0][$type]['id'] : null;
+		}
+		//@todo new throw
+		$type::create();
+		$type::save($data);
+	}
+
+	/**
+	 * Destroys the ARO/ACO node bound to the deleted record
+	 *
+	 * @return void
+	 * @access public
+	 */
+	static public function afterDelete($self, $params, $delete){
+		extract(static::$_config[$self]);
+		$type = static::$_defaults['typeMaps'][$type]; // Aro, Aco
+		//@todo extract it
+		$node = Set::extract($self::node($model), "0.{$type}.id");
+
+		if (!empty($node)) {
+			$type::delete($node);
+		}
+	}
+
+	/**
+	 * Retrieves the Aro/Aco node for this model
+	 *
+	 * @param mixed $ref
+	 * @return array
+	 * @access public
+	 * @link http://book.cakephp.org/view/1322/node
+	 */
+	static public function node($model, $ref = null){
+		extract(static::$_config[$model]);
+		$type = static::$_defaults['typeMaps'][$model]; // Aro, Aco
+		if (empty($ref)) {
+			$ref = array('model' => $model::_name(), 'foreign_key' => $model::data($model::key()));
+		}
+		return $type::node($ref);
 	}
 }
 ?>

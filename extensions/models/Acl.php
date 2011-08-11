@@ -98,7 +98,8 @@ class Acl extends \li3_tree\extensions\Model {
 			$ref = array('model' => $ref::_name(), 'foreign_key' => $ref::key());
 		} elseif (is_object($ref) && is_a($ref, 'lithium\action\Request')) {
 			$obj = $ref;
-			return $this->node($obj);
+			//return $this::node($obj);
+			return self::node($obj);
 		} elseif (is_array($ref) && !(isset($ref['model']) && isset($ref['foreign_key']))) {
 			//associate row
 			$name = key($ref);
@@ -120,7 +121,7 @@ class Acl extends \li3_tree\extensions\Model {
 				$ref = array('model' => $name, 'foreign_key' => $ref[$name][$model::key()]);
 			} else {
 				if (is_string($tmpRef)) {
-					return $this->node($tmpRef);
+					return self::node($tmpRef);
 				}
 				$ref = $tmpRef;
 			}
