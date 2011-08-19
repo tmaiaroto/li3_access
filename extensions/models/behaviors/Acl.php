@@ -1,14 +1,12 @@
 <?php
 namespace li3_access\extensions\models\behaviors;
 
-//use lithium\core\Libraries;
-//use UnexpectedValueException;
-//use lithium\security\Password;
-//use lithium\core\Libraries;
-//use lithium\core\ClassNotFoundException;
-//use lithium\data\Connections;
+//use li3_access\models\Acos;
+//use li3_access\models\Aros;
+use lithium\core\Libraries;
 
 class Acl extends \lithium\data\Model {
+	
 	/**
 	 * default tree configuration
 	 * @var Array
@@ -92,9 +90,9 @@ class Acl extends \lithium\data\Model {
 	 * @return void
 	 * @access public
 	 */
-	static public function afterDelete($self, $params, $delete){
-		extract(static::$_config[$self]);
-		$type = static::$_defaults['typeMaps'][$type]; // Aro, Aco
+	static public function afterDelete($self, $params, $delete) {
+		extract ( static::$_config [$self] );
+		$type = static::$_defaults ['typeMaps'] [$type]; // Aro, Aco
 		//@todo extract it
 		$node = Set::extract($self::node($model), "0.{$type}.id");
 
@@ -113,11 +111,18 @@ class Acl extends \lithium\data\Model {
 	 */
 	static public function node($model, $ref = null){
 		extract(static::$_config[$model]);
-		$type = static::$_defaults['typeMaps'][$model]; // Aro, Aco
+		$type = static::$_defaults['typeMaps'][$type]; // Aro, Aco
 		if (empty($ref)) {
 			$ref = array('model' => $model::_name(), 'foreign_key' => $model::data($model::key()));
 		}
-		return $type::node($ref);
+		$model = Libraries::locate('models', $type, array('libraries' => 'li3_access'));
+		if (empty($model)) {
+			throw new ClassNotFoundException(sprintf("Model class '%s' not found in access\acl\Acl::node() when trying to bind %s object", $model, $type));
+			return null;
+		}
+		return $model::node($ref);
+		//Fatal error: Class 'Aros' not found in /Users/nim/Sites/holicon/pwi2/libraries/li3_access/extensions/models/behaviors/Acl.php on line 124		
+		
 	}
 }
 ?>

@@ -1,6 +1,6 @@
 <?php
-namespace li3_access\extensions\models\acl;
-//use \lithium\util\String;
+namespace li3_access\models;
+//use lithium\util\String;
 //use lithium\security\Password;
 
 class Aros extends \li3_access\extensions\models\Acl {

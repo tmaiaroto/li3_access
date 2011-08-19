@@ -145,12 +145,19 @@ class Acl extends \li3_tree\extensions\Model {
 					'alias' => "{$type}0",
 					'type' => 'LEFT',
 					'constraint' => array(
-						"{$type}.lft" => array(' <= ' => "{$type}0.lft"),
-						"{$type}.rght" => array(' <= ' => "{$type}0.rght")
+						"{$type}.lft" => array('<=' => "{$type}0.lft"),
+						"{$type}.rght" => array('<=' => "{$type}0.rght")
 					)
 				)),
 				'order' => $db->name("{$type}.lft") . ' DESC'
 			);
+//			SELECT "Aro"."id" AS "Aro__id", "Aro"."parent_id" AS "Aro__parent_id",
+//			"Aro"."model" AS "Aro__model", "Aro"."foreign_key" AS
+//			"Aro__foreign_key", "Aro"."alias" AS "Aro__alias" FROM "aros" AS "Aro"
+//			LEFT JOIN "aros" AS "Aro0" ON ("Aro"."lft" <= "Aro0"."lft" AND
+//			"Aro"."rght" >= "Aro0"."rght") WHERE "Aro0"."model" = 'User' AND
+//			"Aro0"."foreign_key" = '82' ORDER BY "Aro"."lft" DESC 
+
 			$result = self::find('first', $queryData);
 			if (!$result) {
 				throw new \Exception(sprintf(__("AclNode::node() - Couldn't find %s node identified by \"%s\"", true), $type, print_r($ref, true)));

@@ -1,5 +1,5 @@
 <?php
-namespace li3_access\extensions\models\acl;
+namespace li3_access\models;
 //use \lithium\util\String;
 //use lithium\security\Password;
 
