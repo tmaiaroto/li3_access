@@ -8,18 +8,15 @@ use lithium\core\Libraries;
 use lithium\core\ClassNotFoundException;
 use lithium\data\Connections;
 
-class Acl extends \li3_tree\extensions\Model {
+class Acl extends \li3_behaviors\extensions\Model {
 
-	/**
-	 * __init()
-	 *
-	 * applies Tree Behaviour to Model
-	 */
-	public static function __init() {
-		parent::__init();
-		$class = get_called_class();
-		static::applyBehavior($class);
-	}
+	// public static function __init() {
+	// 	parent::__init();
+	// 	$class = get_called_class();
+	// 	static::applyBehavior($class);
+	// }
+
+	protected $_actsAs = array('Tree');
 
 /**
  * Retrieves the Aro/Aco node for this model
@@ -66,17 +63,23 @@ class Acl extends \li3_tree\extensions\Model {
 			foreach ($path as $i => $alias) {
 				$j = $i - 1;
 
+				$constraint = "({$type}{$i}.lft > {$type}{$j}.lft AND ";
+				$constraint .= "{$type}{$i}.rght < {$type}{$j}.rght AND ";
+				$constraint .= "{$type}{$i}.alias = ".$db->value($alias, array('type' => 'string'))." AND ";
+				$constraint .= "{$type}{$j}.id = {$type}{$i}.parent_id)";
+
 				$queryData['joins'][] = array(
 					//'table' => $db->fullTableName($this),
 					'source' => $table,
 					'alias' => "{$type}{$i}",
 					'type'  => 'LEFT',
-					'constraint' => array(
-						$db->name("{$type}{$i}.lft") . ' > ' . $db->name("{$type}{$j}.lft"),
-						$db->name("{$type}{$i}.rght") . ' < ' . $db->name("{$type}{$j}.rght"),
-						$db->name("{$type}{$i}.alias") . ' = ' . $db->value($alias, array('type'=>'string')),
-						$db->name("{$type}{$j}.id") . ' = ' . $db->name("{$type}{$i}.parent_id")
-					)
+//					'constraint' => array(
+//						$db->name("{$type}{$i}.lft") . ' > ' . $db->name("{$type}{$j}.lft"),
+//						$db->name("{$type}{$i}.rght") . ' < ' . $db->name("{$type}{$j}.rght"),
+//						$db->name("{$type}{$i}.alias") . ' = ' . $db->value($alias, array('type'=>'string')),
+//						$db->name("{$type}{$j}.id") . ' = ' . $db->name("{$type}{$i}.parent_id")
+//					)
+					'constraint' => $constraint
 				);
 
 				$queryData['conditions'] = array('or' => array(
@@ -144,23 +147,20 @@ class Acl extends \li3_tree\extensions\Model {
 					'source' => $table,
 					'alias' => "{$type}0",
 					'type' => 'LEFT',
-					'constraint' => array(
-						"{$type}.lft" => array('<=' => "{$type}0.lft"),
-						"{$type}.rght" => array('<=' => "{$type}0.rght")
-					)
+//					'constraint' => array(
+//						'and' => array(
+//							"{$type}.lft" => array('<=' => "{$type}0.lft"),
+//							"{$type}.rght" => array('>=' => "{$type}0.rght")
+//						)
+//					)
+					'constraint' => "({$type}.lft <= {$type}0.lft AND {$type}.rght >= {$type}0.rght)"
 				)),
 				'order' => $db->name("{$type}.lft") . ' DESC'
 			);
-//			SELECT "Aro"."id" AS "Aro__id", "Aro"."parent_id" AS "Aro__parent_id",
-//			"Aro"."model" AS "Aro__model", "Aro"."foreign_key" AS
-//			"Aro__foreign_key", "Aro"."alias" AS "Aro__alias" FROM "aros" AS "Aro"
-//			LEFT JOIN "aros" AS "Aro0" ON ("Aro"."lft" <= "Aro0"."lft" AND
-//			"Aro"."rght" >= "Aro0"."rght") WHERE "Aro0"."model" = 'User' AND
-//			"Aro0"."foreign_key" = '82' ORDER BY "Aro"."lft" DESC 
 
-			$result = self::find('first', $queryData);
+		$result = self::find('first', $queryData + array('return'=>'array'));
 			if (!$result) {
-				throw new \Exception(sprintf(__("AclNode::node() - Couldn't find %s node identified by \"%s\"", true), $type, print_r($ref, true)));
+				trigger_error(sprintf("AclNode::node() - Couldn't find %s node identified by \"%s\"", $type, print_r($ref, true)), E_USER_WARNING);
 			}
 		}
 		return $result;

@@ -41,8 +41,9 @@ class Acl extends \lithium\data\Model {
 		//$type = static::$_defaults['typeMaps'][static::$_config[$self]['type']];
 
 		static::applyFilter('save', function($self, $params, $chain) {
+			$exist = $params['entity']->exists();
 			$save = $chain->next($self, $params, $chain);
-			$self::afterSave($self, $params, $save);
+			$self::afterSave($self, $params, $save, $exist);
 			return $save;
 		});
 
@@ -59,7 +60,7 @@ class Acl extends \lithium\data\Model {
 	 * @return void
 	 * @access public
 	 */
-	static public function afterSave($self, $params, $save) {
+	static public function afterSave($self, $params, $save, $exist) {
 		extract(static::$_config[$self]);
 		$entity = $params['entity'];
 		$type = static::$_defaults['typeMaps'][$type]; // Aro, Aco
@@ -68,20 +69,28 @@ class Acl extends \lithium\data\Model {
 			$parent = $self::node($self, $parent);
 		}
 		$data = array(
-			'parent_id' => isset($parent[$type]['id']) ? $parent[$type]['id'] : null,
+			'parent_id' => isset($parent[0]['id']) ? $parent[0]['id'] : null,
 			//'model' => $model->alias,
 			'model' => $self::_name(),
 			//'foreign_key' => $model->id
 			'foreign_key' => $entity->data('id')
 		);
 
-		if ($entity->exists()) {
-			$node = $self::node($self);
+		if ($exist) {
+			$node = $self::node($self, array('model' => $self::_name(), 'foreign_key' => $entity->data('id')));
 			$data['id'] = isset($node[0][$type]['id']) ? $node[0][$type]['id'] : null;
 		}
-		//@todo new throw
-		$type::create();
-		$type::save($data);
+		/*
+		 * Warning: AclNode::node() - Couldn't find Aros node identified by "Array ( [Aros0.model] => Users [Aros0.foreign_key] => 168 ) " in /Users/nim/Sites/holicon/pwi2/libraries/li3_access/extensions/models/Acl.php on line 166
+		 * Fatal error: Class 'Aros' not found in /Users/nim/Sites/holicon/pwi2/libraries/li3_access/extensions/models/behaviors/Acl.php on line 83
+		 */
+		$model = Libraries::locate('models', $type, array('libraries' => 'li3_access'));
+		if (empty($model)) {
+			throw new ClassNotFoundException(sprintf("Model class '%s' not found in access\acl\Acl::node() when trying to bind %s object", $model, $type));
+			return null;
+		}
+		$model = $model::create();
+		$model->save($data);
 	}
 
 	/**
@@ -109,11 +118,13 @@ class Acl extends \lithium\data\Model {
 	 * @access public
 	 * @link http://book.cakephp.org/view/1322/node
 	 */
-	static public function node($model, $ref = null){
-		extract(static::$_config[$model]);
+	static public function node($self, $ref = null){
+		extract ( static::$_config [$self] );
 		$type = static::$_defaults['typeMaps'][$type]; // Aro, Aco
 		if (empty($ref)) {
-			$ref = array('model' => $model::_name(), 'foreign_key' => $model::data($model::key()));
+			throw new \Excepction('Not found config for `ref` param');
+			//@fixme get data from self, its inposible i think
+			$ref = array('model' => $self::_name(), 'foreign_key' => $self::data($self::key()));
 		}
 		$model = Libraries::locate('models', $type, array('libraries' => 'li3_access'));
 		if (empty($model)) {
