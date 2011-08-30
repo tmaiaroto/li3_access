@@ -3,7 +3,7 @@ namespace li3_access\models;
 //use \lithium\util\String;
 //use lithium\security\Password;
 
-class Permissions extends \li3_access\extensions\models\Acl {
+class Permissions extends \li3_access\extensions\data\model\Acl {
 
 /**
  * Override default `_meta` options

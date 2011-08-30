@@ -1,57 +1,53 @@
 <?php
-namespace li3_access\extensions\models\behaviors;
+namespace li3_access\extensions\data\behavior;
 
-//use li3_access\models\Acos;
-//use li3_access\models\Aros;
+use li3_access\models\Acos;
+use li3_access\models\Aros;
 use lithium\core\Libraries;
 
-class Acl extends \lithium\data\Model {
-	
-	/**
-	 * default tree configuration
-	 * @var Array
-	 */
-	protected static $_defaults = array(
-		'typeMaps' => array(
-			'requester' => 'Aros', 'controlled' => 'Acos'
-		),
-//		'fields' => array(
-//			'parnet_id' => 'parent_id',
-//			'foreign_key' => 'foreign_key',
-//			'model' => 'model'
-//		)
-	);
+class Acl extends \lithium\core\StaticObject {
 
 	/**
-	 * tree config
-	 * @var Array holding Arrays of Configuration Arrays
-	 */
-	protected static $_config = array();
-	/**
-	 * applyBehavior
+	 * An array of configurations indexed by model class name, for each model to which this class
+	 * is bound.
 	 *
-	 * Applies Behaviour to the Model and configures its use
-	 *
-	 * @param \lithium\data\Model $self The Model using this behaviour
+	 * @var array
 	 */
-	public static function applyBehavior($self, $config = array()) {
-		static::$_config[$self] = array_merge(static::$_defaults, $config);
-		//static::$_config[$self]['type'] = strtolower(static::$_config[$self]['type']);
+	protected static $_configurations = array();
 
-		//$type = static::$_defaults['typeMaps'][static::$_config[$self]['type']];
+	/**
+	 * Beahvior init setup
+	 *
+	 * @param object $class
+	 * @param array	$config
+	 */
+	public static function bind($class, array $config = array()) {
 
-		static::applyFilter('save', function($self, $params, $chain) {
+		$defaults = array(
+			'typeMaps' => array(
+				'requester' => 'Aros', 'controlled' => 'Acos'
+			),
+			'type' => false
+		);
+		$config += $defaults;
+		//@todo throw exception when `type` false
+
+		$config['type'] = $defaults['typeMaps'][$config['type']]; // Aros, Acos
+
+		$class::applyFilter('save', function($self, $params, $chain) use ($class) {
 			$exist = $params['entity']->exists();
 			$save = $chain->next($self, $params, $chain);
-			$self::afterSave($self, $params, $save, $exist);
+			Acl::invokeMethod('_afterSave', array($class, $params, $save, $exist));
 			return $save;
 		});
 
-		static::applyFilter('delete', function($self, $params, $chain) {
+		$class::applyFilter('delete', function($self, $params, $chain) use ($class) {
 			$delete = $chain->next($self, $params, $chain);
-			$self::afterDelete($self, $params, $delete);
+			Acl::invokeMethod('_afterDelete', array($class, $params, $delete));
 			return $delete;
 		});
+
+		return static::$_configurations[$class] = $config;
 	}
 
 	/**
@@ -60,24 +56,23 @@ class Acl extends \lithium\data\Model {
 	 * @return void
 	 * @access public
 	 */
-	static public function afterSave($self, $params, $save, $exist) {
-		extract(static::$_config[$self]);
+	protected static function _afterSave($self, $params, $save, $exist) {
+		extract(static::$_configurations[$self]);
 		$entity = $params['entity'];
-		$type = static::$_defaults['typeMaps'][$type]; // Aro, Aco
 		$parent = $self::parentNode($entity);
 		if (!empty($parent)) {
-			$parent = $self::node($self, $parent);
+			$parent = self::node($self, $parent);
 		}
 		$data = array(
 			'parent_id' => isset($parent[0]['id']) ? $parent[0]['id'] : null,
 			//'model' => $model->alias,
-			'model' => $self::_name(),
+			'model' => $self::meta('name'),
 			//'foreign_key' => $model->id
 			'foreign_key' => $entity->data('id')
 		);
 
 		if ($exist) {
-			$node = $self::node($self, array('model' => $self::_name(), 'foreign_key' => $entity->data('id')));
+			$node = self::node($self, array('model' => $self::meta('name'), 'foreign_key' => $entity->data('id')));
 			$data['id'] = isset($node[0][$type]['id']) ? $node[0][$type]['id'] : null;
 		}
 		/*
@@ -99,9 +94,9 @@ class Acl extends \lithium\data\Model {
 	 * @return void
 	 * @access public
 	 */
-	static public function afterDelete($self, $params, $delete) {
-		extract ( static::$_config [$self] );
-		$type = static::$_defaults ['typeMaps'] [$type]; // Aro, Aco
+	protected static function _afterDelete($self, $params, $delete) {
+		extract(static::$_configurations[$self]);
+		$type = static::$_defaults['typeMaps'][$type]; // Aro, Aco
 		//@todo extract it
 		$node = Set::extract($self::node($model), "0.{$type}.id");
 
@@ -119,8 +114,7 @@ class Acl extends \lithium\data\Model {
 	 * @link http://book.cakephp.org/view/1322/node
 	 */
 	static public function node($self, $ref = null){
-		extract ( static::$_config [$self] );
-		$type = static::$_defaults['typeMaps'][$type]; // Aro, Aco
+		extract(static::$_configurations[$self]);
 		if (empty($ref)) {
 			throw new \Excepction('Not found config for `ref` param');
 			//@fixme get data from self, its inposible i think
@@ -130,10 +124,11 @@ class Acl extends \lithium\data\Model {
 		if (empty($model)) {
 			throw new ClassNotFoundException(sprintf("Model class '%s' not found in access\acl\Acl::node() when trying to bind %s object", $model, $type));
 			return null;
-		}
+		}	
 		return $model::node($ref);
-		//Fatal error: Class 'Aros' not found in /Users/nim/Sites/holicon/pwi2/libraries/li3_access/extensions/models/behaviors/Acl.php on line 124		
-		
+		//i haved defined `use` statment at head
+		//Fatal error: Class 'Aros' not found in /Users/nim/Sites/holicon/pwi2/libraries/li3_access/extensions/models/behaviors/Acl.php on line 124
+
 	}
 }
 ?>

@@ -6,7 +6,7 @@
  * li3_tree behavior https://github.com/agborkowski/li3_tree
  * li3_behavior https://github.com/agborkowski/li3_behavior
  */
-namespace li3_access\extensions\models;
+namespace li3_access\extensions\data\model;
 
 //use lithium\core\Libraries;
 //use UnexpectedValueException;
@@ -44,6 +44,7 @@ class Acl extends \li3_behaviors\extensions\Model {
 			$table = $meta['source']; // aros
 		} else {
 			//$table = Inflector::pluralize(Inflector::underscore($type));
+			throw new ClassNotFoundException('Set `source` name in model');
 		}
 
 		if (empty($ref)) {
@@ -165,8 +166,9 @@ class Acl extends \li3_behaviors\extensions\Model {
 				'order' => $db->name("{$type}.lft") . ' DESC'
 			);
 
-		$result = self::find('first', $queryData + array('return'=>'array'));
+			$result = self::find('first', $queryData + array('return'=>'array'));
 			if (!$result) {
+				// should be trigger becouse throw stops behavior...
 				trigger_error(sprintf("AclNode::node() - Couldn't find %s node identified by \"%s\"", $type, print_r($ref, true)), E_USER_WARNING);
 			}
 		}

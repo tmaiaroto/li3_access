@@ -3,7 +3,7 @@ namespace li3_access\models;
 //use lithium\util\String;
 //use lithium\security\Password;
 
-class Aros extends \li3_access\extensions\models\Acl {
+class Aros extends \li3_access\extensions\data\model\Acl {
 
 	protected $_meta = array('source' => 'aros');
 
