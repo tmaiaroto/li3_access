@@ -9,8 +9,7 @@
 namespace li3_access\security;
 
 /**
- * A `NetworkException` may be thrown whenever an unsuccessful attempt is made to connect to a
- * remote service over the network. This may be a web service, a database, or another network
+ * An `AccessDeniedException` is thrown whenever an unhandled attempt is made to access a restricted
  * resource.
  */
 class AccessDeniedException extends \RuntimeException {

@@ -1,6 +1,6 @@
-#Access control library for the Lithium framework.
+# Access control library for the Lithium framework.
 
-##Installation
+## Installation
 
 Checkout the code to either of your library directories:
 
@@ -11,7 +11,7 @@ Include the library in in your `/app/config/bootstrap/libraries.php`
 
     Libraries::add('li3_access');
 
-##Usage
+## Usage
 
 You must configure the adapter you wish to use first, but once you have it configured it's fairly simple to use.
 
@@ -22,11 +22,11 @@ You must configure the adapter you wish to use first, but once you have it confi
 
 If the request validates correctly based on your configuration then `Access::check()` will return an empty `array()` otherwise it will return and array with two keys; `message` and `redirect`. These values are built into the Access class but you can override them but passing them as `$options` to all three of the adapters in this repository.
 
-##Configuration
+## Configuration
 
 In this repository there are three adapters. All three work in a slightly different way.
 
-###Simple Adapter
+### sSimple Adapter
 
 The simple adapter is exactly what it says it is. The check method only checks that the data passed to is not empty and as a result the configuration is trivial.
 
@@ -36,7 +36,7 @@ The simple adapter is exactly what it says it is. The check method only checks t
 
 And that's it!
 
-###Rules Adapter
+### Rules Adapter
 
 This adapter effectively allows you to tell it how it should work. It comes with a few preconfigured rules by default but it's very simple to add your own. Its configuration is the same as the `Simple` adapter if you only want to use the built in methods.
 
@@ -63,7 +63,7 @@ Then to use your new rule:
 
 One more to go!
 
-###AuthRbac Adapter
+### AuthRbac Adapter
 
 This is the most complex adapter in this repository at this time. It's used for Role Based Access Control. You define a set of roles (or conditions) to match the request against, if the request matches your conditions the adapter then checks to see if the user is authenticated with the appropriate `\lithium\security\Auth` configurations to be granted access.
 
@@ -101,7 +101,7 @@ First we tell it which adapter to use:
 
 Then we set the roles array. This array is required if you want to use this adapter. The roles are evaluated from top to bottom. So if a role at the bottom contradicts one closer to the top, the bottom will take precedence.
 
-####There are five possible options you can specify for a single role.
+#### There are five possible options you can specify for a single role.
 
 *match*
 
@@ -148,7 +148,7 @@ Setting 'requester' => array('user', 'customer') would only apply the rule to an
 
 A boolean that if set to false forces a role that would have been granted access to deny access. This way you can apply a rule to everyone and then proceed to exclude requesters manualy.
 
-###Filters
+### Filters
 
 The Access::check() method is filterable. You can apply the filters in the configuration like so:
 
@@ -164,9 +164,9 @@ The Access::check() method is filterable. You can apply the filters in the confi
         )
     ));
 
-##Credits
+## Credits
 
-###Tom Maiaroto
+### Tom Maiaroto
 
 The original author of this library.
 
@@ -174,7 +174,7 @@ Github: [tmaiaroto](https://github.com/tmaiaroto/li3_access)
 
 Website: [Shift8 Creative](http://www.shift8creative.com)
 
-##Weluse
+## Weluse
 
 Wrote the original Rbac adapter.
 
@@ -182,7 +182,7 @@ Github: [dgAlien](https://github.com/dgAlien/li3_access) [weluse](https://github
 
 Website: [Weluse](http://www.weluse.de)
 
-##rich97
+## rich97
 
 Modified the original Rbac adapter, added some tests and wrote this version of the documentation.
 
