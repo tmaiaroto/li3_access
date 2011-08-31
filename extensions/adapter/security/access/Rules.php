@@ -76,7 +76,6 @@ class Rules extends \lithium\core\Object {
 		// If a single rule was passed, wrap it in an array so it can be iterated as if
 		// there were multiple
 		$rules = (isset($options['rules']['rule'])) ? array($options['rules']) : $options['rules'];
-		$result = array();
 
 		// Loop through all the rules. They must all pass.
 		foreach ($rules as $rule) {
@@ -86,18 +85,14 @@ class Rules extends \lithium\core\Object {
 				isset($rule['rule']) &&
 				(is_string($rule['rule']) || is_callable($rule['rule']))
 			);
-
 			if (!$hasRule) {
 				continue;
 			}
-
 			if ($this->_call($rule, $user, $request) === false) {
-				$result['rule'] = $rule['rule'];
-				$result['message'] = isset($rule['message']) ? $rule['message'] : $options['message'];
-				$result['redirect'] = isset($rule['redirect']) ? $rule['redirect'] : $options['redirect'];
+				return $rule + array_diff_key($options, $defaults);
 			}
 		}
-		return $result;
+		return array();
 	}
 
 	protected function _call($rule, $user, $request) {
