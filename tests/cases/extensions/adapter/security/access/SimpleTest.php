@@ -9,33 +9,32 @@
 
 namespace li3_access\tests\cases\extensions\adapter\security\access;
 
-use \li3_access\security\Access;
-use \lithium\net\http\Request;
+use li3_access\security\Access;
+use lithium\net\http\Request;
 
 class SimpleTest extends \lithium\test\Unit {
 
-    public function setUp() {
-        Access::config(array(
-            'test_access' => array(
-                'adapter' => 'Simple'
-            )
-        ));
-    }
+	public function setUp() {
+		Access::config(array(
+			'test_access' => array('adapter' => 'Simple')
+		));
+	}
 
-    public function tearDown() {}
+	public function tearDown() {}
 
-    public function testCheck() {
-        $request = new Request();
+	public function testCheck() {
+		$request = new Request();
 
-        $expected = array();
-        $result = Access::check('test_access', array('username' => 'Tom'), $request);
-        $this->assertEqual($expected, $result);
+		$result = Access::check('test_access', array('username' => 'Tom'), $request);
+		$this->assertEqual(array(), $result);
 
-        $expected = array('message' => 'Access denied.', 'redirect' => '/login');
-        $result = Access::check('test_access', false, $request, array('redirect' => '/login', 'message' => 'Access denied.'));
-        $this->assertEqual($expected, $result);
-    }
-
+		$expected = array('message' => 'Access denied.', 'redirect' => '/login');
+		$result = Access::check('test_access', false, $request, array(
+			'redirect' => '/login',
+			'message' => 'Access denied.'
+		));
+		$this->assertEqual($expected, $result);
+	}
 }
 
 ?>

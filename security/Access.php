@@ -29,7 +29,7 @@ class Access extends \lithium\core\Adaptable {
 	 *
 	 * @var object `Collection` of authentication configurations.
 	 */
-	protected static $_configurations = array( );
+	protected static $_configurations = array();
 
 	/**
 	 * Libraries::locate() compatible path to adapters for this class.
@@ -44,7 +44,8 @@ class Access extends \lithium\core\Adaptable {
 	 *
 	 * @var array Associative array of class names & their namespaces.
 	 */
-	protected static $_classes = array( );
+	protected static $_classes = array(
+	);
 
 	/**
 	 * Called when an adapter configuration is first accessed, this method sets the default
@@ -77,11 +78,13 @@ class Access extends \lithium\core\Adaptable {
 	 *        the user requesting access. Or `false` (because Auth::check() can return `false`).
 	 * @param object $request The Lithium Request object.
 	 * @param array $options An array of additional options.
-	 * @return Array An empty array if access is allowed and an array with reasons for denial if denied.
+	 * @return Array An empty array if access is allowed and an array with reasons for denial
+	 *         if denied.
 	 */
 	public static function check($name, $user, $request, array $options = array()) {
 		$defaults = array(
-				'message' => 'You are not permitted to access this area.', 'redirect' => '/'
+			'message' => 'You are not permitted to access this area.',
+			'redirect' => '/'
 		);
 		$options += $defaults;
 
@@ -89,13 +92,14 @@ class Access extends \lithium\core\Adaptable {
 			throw new ConfigException("Configuration `{$name}` has not been defined.");
 		}
 		$filter = function($self, $params) use ($name) {
-							return $self::adapter($name)->check($params['user'], $params['request'], $params['options']);
-						};
-		$filters = (array) $config['filters'];
+			$user = $params['user'];
+			$request = $params['request'];
+			$options = $params['options'];
+			return $self::adapter($name)->check($user, $request, $options);
+		};
 		$params = compact('user', 'request', 'options');
-		return static::_filter(__FUNCTION__, $params, $filter, $filters);
+		return static::_filter(__FUNCTION__, $params, $filter, (array) $config['filters']);
 	}
-
 }
 
 ?>
