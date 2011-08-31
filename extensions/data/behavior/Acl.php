@@ -1,8 +1,9 @@
 <?php
 namespace li3_access\extensions\data\behavior;
 
-use li3_access\models\Acos;
-use li3_access\models\Aros;
+// @fixme dont work when i try call models in `node` method
+//use li3_access\models\Acos;
+//use li3_access\models\Aros;
 use lithium\core\Libraries;
 
 class Acl extends \lithium\core\StaticObject {
@@ -96,10 +97,8 @@ class Acl extends \lithium\core\StaticObject {
 	 */
 	protected static function _afterDelete($self, $params, $delete) {
 		extract(static::$_configurations[$self]);
-		$type = static::$_defaults['typeMaps'][$type]; // Aro, Aco
 		//@todo extract it
 		$node = Set::extract($self::node($model), "0.{$type}.id");
-
 		if (!empty($node)) {
 			$type::delete($node);
 		}
