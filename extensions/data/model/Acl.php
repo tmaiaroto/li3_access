@@ -13,38 +13,35 @@ namespace li3_access\extensions\data\model;
 //use lithium\security\Password;
 use lithium\core\Libraries;
 use lithium\core\ClassNotFoundException;
+use lithium\core\ConfigException;
 use lithium\data\Connections;
 
 class Acl extends \li3_behaviors\extensions\Model {
 
-	// public static function __init() {
-	// 	parent::__init();
-	// 	$class = get_called_class();
-	// 	static::applyBehavior($class);
-	// }
-
+	/**
+	 * ACL models use the Tree behavior
+	 *
+	 * @var array
+	 * @access protected
+	 */
 	protected $_actsAs = array('Tree');
 
-/**
- * Retrieves the Aro/Aco node for this model
- *
- * @param mixed $ref Array with 'model' and 'foreign_key', model object, or string value
- * @return array Node found in database
- * @access public
- */
+	/**
+	 * Retrieves the Aro/Aco node for this model
+	 *
+	 * @param mixed $ref Array with 'model' and 'foreign_key', model object, or string value
+	 * @return array Node found in database
+	 * @access public
+	 */
 	public static function node($ref = null) {
-		$type =  self::_name(); //Aros
 		$db = self::connection(); //db postgres connection
-		$meta = self::meta(); //meta (array)
-		$key = self::key(); // id
-
+		$type =  self::meta('name'); //Aros
 		$result = null;
 
-		if (!empty($meta['source'])) {
-			$table = $meta['source']; // aros
-		} else {
+		$table = self::meta('source');
+		if (empty($table)) {
 			//$table = Inflector::pluralize(Inflector::underscore($type));
-			throw new ClassNotFoundException('Set `source` name in model');
+			throw new ConfigException('Set `source` name in model');
 		}
 
 		if (empty($ref)) {
@@ -58,15 +55,16 @@ class Acl extends \li3_behaviors\extensions\Model {
 				'conditions' => array(
 					"{$type}.lft" . ' <= ' . "{$type}0.lft",
 					"{$type}.rght" . ' >= ' . "{$type}0.rght",
+				),
 				'fields' => array('id', 'parent_id', 'model', 'foreign_key', 'alias'),
 				'joins' => array(array(
 					'source' => $table,
 					'alias' => "{$type}0",
 					'type' => 'LEFT',
-					'constraint' => array("{$type}0.alias" => $start)
+					'constraint' => array("{$type}0.alias" =>$db->value($start, array('type' => 'string')))
 				)),
 				'order' => "{$type}.lft" . ' DESC'
-			));
+			);
 
 			foreach ($path as $i => $alias) {
 				$j = $i - 1;
@@ -91,22 +89,22 @@ class Acl extends \li3_behaviors\extensions\Model {
 				);
 
 				$queryData['conditions'] = array('or' => array(
-					$db->name("{$type}.lft") . ' <= ' . $db->name("{$type}0.lft") . ' AND ' . $db->name("{$type}.rght") . ' >= ' . $db->name("{$type}0.rght"),
-					$db->name("{$type}.lft") . ' <= ' . $db->name("{$type}{$i}.lft") . ' AND ' . $db->name("{$type}.rght") . ' >= ' . $db->name("{$type}{$i}.rght"))
-				);
+					'(' . $db->name("{$type}.lft") . ' <= ' . $db->name("{$type}0.lft") . ' AND ' . $db->name("{$type}.rght") . ' >= ' . $db->name("{$type}0.rght") . ')',
+					'(' . $db->name("{$type}.lft") . ' <= ' . $db->name("{$type}{$i}.lft") . ' AND ' . $db->name("{$type}.rght") . ' >= ' . $db->name("{$type}{$i}.rght") . ')'
+				));
 			}
-			$result = self::find('first', $queryData);
+			$result = self::find('all', $queryData + array('return' => 'array'));
 			$path = array_values($path);
 
 			if (
-				!isset($result[0][$type]) ||
-				(!empty($path) && $result[0][$type]['alias'] != $path[count($path) - 1]) ||
-				(empty($path) && $result[0][$type]['alias'] != $start)
+				!isset($result[0]) ||
+				(!empty($path) && $result[0]['alias'] != $path[count($path) - 1]) ||
+				(empty($path) && $result[0]['alias'] != $start)
 			) {
 				return false;
 			}
 		} elseif (is_object($ref) && is_a($ref, 'lithium\data\Model')) {
-			$ref = array('model' => $ref::_name(), 'foreign_key' => $ref::key());
+			$ref = array('model' => $ref::meta('name'), 'foreign_key' => $ref[$ref::meta('name')][$model::key()]);
 		} elseif (is_object($ref) && is_a($ref, 'lithium\action\Request')) {
 			$obj = $ref;
 			//return $this::node($obj);
@@ -166,7 +164,7 @@ class Acl extends \li3_behaviors\extensions\Model {
 				'order' => $db->name("{$type}.lft") . ' DESC'
 			);
 
-			$result = self::find('first', $queryData + array('return'=>'array'));
+			$result = self::find('all', $queryData + array('return' => 'array'));
 			if (!$result) {
 				// should be trigger becouse throw stops behavior...
 				trigger_error(sprintf("AclNode::node() - Couldn't find %s node identified by \"%s\"", $type, print_r($ref, true)), E_USER_WARNING);

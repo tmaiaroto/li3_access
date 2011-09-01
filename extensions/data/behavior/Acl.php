@@ -117,7 +117,7 @@ class Acl extends \lithium\core\StaticObject {
 		if (empty($ref)) {
 			throw new \Excepction('Not found config for `ref` param');
 			//@fixme get data from self, its inposible i think
-			$ref = array('model' => $self::_name(), 'foreign_key' => $self::data($self::key()));
+			$ref = array('model' => $self::meta('name'), 'foreign_key' => $self::data($self::key()));
 		}
 		$model = Libraries::locate('models', $type, array('libraries' => 'li3_access'));
 		if (empty($model)) {
