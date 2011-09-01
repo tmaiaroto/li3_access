@@ -165,14 +165,45 @@ The Access::check() method is filterable. You can apply the filters in the confi
     ));
 ## Acl adapter
 
-ACL adapter uses 2 plugin libraries
+ACL adapter uses 2 plugin libraries:
 
-li3_tree: https://github.com/agborkowski/li3_tree
-li3_behaviors: https://github.com/agborkowski/li3_behaviors_
+- [li3_tree](https://github.com/agborkowski/li3_tree)
+- [li3_behaviors](https://github.com/agborkowski/li3_behaviors)
+
+### Sql database
+
+3 tables must be insert to database:
+- aros => Aro
+- acos => Aco
+- aros_acors => Permision
+
+### Auth adapter config
+
+standard configuration you can check it on official lithium php documentation
+
+````
+Auth::config(array(
+	'user' => array(
+			'adapter' => 'Form',
+			'model' => 'Users',
+//....
+````
+
+### Access adapter config
+
+easy config params `'adapter'` set to `acl`, and get user credentials from `Auth` adapter
+````
+Access::config(array(
+	'acl' => array(
+		'adapter' => 'Acl',
+		'credentials' => Auth::config('user')
+	)
+));
+````
 
 ### ACL Behaviors
 
-add to your models 'Users' 
+add to your models 'Users'. Thanx to it after you inser or delete users, roles your Aros trees is refresh
 
 ````
 //...
@@ -321,3 +352,11 @@ Modified the original Rbac adapter, added some tests and wrote this version of t
 Github: [rich97](https://github.com/rich97/li3_access)
 
 Website: [Enrich.it](http://www.enrich.it)
+
+## rich97
+
+add Acl adapter and behaviors
+
+Github: [AgBorkowski](https://github.com/agborkowski/li3_access)
+
+Website: [Holicon s](http://www.holicon.pl)
