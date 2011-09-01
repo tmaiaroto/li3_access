@@ -156,10 +156,16 @@ class Acl extends \lithium\core\Object {
 		
 	}
 
+	/**
+	 * undocument
+	 */
 	public static function allow($aro, $aco) {
 		return false;
 	}
 
+	/**
+	 * undocument
+	 */
 	public static function deny($aro, $aco) {
 		return false;
 	}
