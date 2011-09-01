@@ -10,68 +10,57 @@
 namespace li3_access\tests\cases\extensions\adapter\security\access;
 
 use lithium\action\Request;
-use li3_access\security\Access;
+use li3_access\extensions\adapter\security\access\Rules;
 
 class RulesTest extends \lithium\test\Unit {
 
-	public function setUp() {
-		Access::config(array(
-			'test_rulebased' => array('adapter' => 'Rules')
-		));
-	}
-
-	public function tearDown() {}
-
 	public function testPatternBasedIpMatching() {
 		$request = new Request(array('env' => array('REMOTE_ADDR' => '10.0.1.2')));
+		$adapter = new Rules();
 
-		// Multiple rules, they should all pass
-		$rules = array(
-			array(
-				'rule' => 'allowIp',
-				'message' => 'You can not access this from your location.',
-				'ip' => '/10\.0\.1\.\d+/'
-			)
-		);
-		$result = Access::check('test_rulebased', array(), $request, compact('rules'));
+		$rules = array(array(
+			'rule' => 'allowIp',
+			'message' => 'You can not access this from your location.',
+			'ip' => '/10\.0\.1\.\d+/'
+		));
+		$result = $adapter->check(array(), $request, compact('rules'));
 		$this->assertEqual(array(), $result);
 
 		$request = new Request(array('env' => array('REMOTE_ADDR' => '10.0.1.255')));
-		$result = Access::check('test_rulebased', array(), $request, compact('rules'));
+		$result = $adapter->check(array(), $request, compact('rules'));
 		$this->assertEqual(array(), $result);
 
 		$request = new Request(array('env' => array('REMOTE_ADDR' => '10.0.2.1')));
-		$result = Access::check('test_rulebased', array(), $request, compact('rules'));
+		$result = $adapter->check(array(), $request, compact('rules'));
 		$this->assertEqual('You can not access this from your location.', $result['message']);
 	}
 
 	public function testArrayBasedIpMatching() {
-		// Multiple rules, they should all pass
-		$rules = array(
-			array(
-				'rule' => 'allowIp',
-				'message' => 'You can not access this from your location.',
-				'ip' => array('10.0.1.2', '10.0.1.3', '10.0.1.4')
-			)
-		);
+		$adapter = new Rules();
+		$rules = array(array(
+			'rule' => 'allowIp',
+			'message' => 'You can not access this from your location.',
+			'ip' => array('10.0.1.2', '10.0.1.3', '10.0.1.4')
+		));
 
 		foreach (array(2, 3, 4) as $i) {
 			$request = new Request(array('env' => array('REMOTE_ADDR' => "10.0.1.{$i}")));
-			$result = Access::check('test_rulebased', array(), $request, compact('rules'));
+			$result = $adapter->check(array(), $request, compact('rules'));
 			$this->assertEqual(array(), $result);
 		}
 
 		foreach (array(1, 5, 255) as $i) {
 			$request = new Request(array('env' => array('REMOTE_ADDR' => "10.0.1.{$i}")));
-			$result = Access::check('test_rulebased', array(), $request, compact('rules'));
+			$result = $adapter->check(array(), $request, compact('rules'));
 			$this->assertEqual('You can not access this from your location.', $result['message']);
 		}
 	}
 
 	public function testCheck() {
+		$user = array('username' => 'Tom');
 		$request = new Request(array('env' => array('REMOTE_ADDR' => '10.0.1.1')));
+		$adapter = new Rules();
 
-		// Multiple rules, they should all pass
 		$rules = array(
 			array('rule' => 'allowAnyUser', 'message' => 'You must be logged in.'),
 			array('rule' => 'allowAll', 'message' => 'You must be logged in.'),
@@ -81,77 +70,109 @@ class RulesTest extends \lithium\test\Unit {
 				'ip' => '10.0.1.1'
 			)
 		);
-		$result = Access::check('test_rulebased', array('username' => 'Tom'), $request, array(
-			'rules' => $rules
-		));
+		$result = $adapter->check($user, $request, compact('rules'));
 		$this->assertEqual(array(), $result);
 
-		// Single rule in multi-demnsional array
 		$rules = array(array('rule' => 'denyAll', 'message' => 'You must be logged in.'));
-		$expected = array(
-			'rule' => 'denyAll', 'message' => 'You must be logged in.', 'redirect' => '/'
-		);
-		$result = Access::check('test_rulebased', array('username' => 'Tom'), $request, array(
-			'rules' => $rules
-		));
+		$expected = array('rule' => 'denyAll', 'message' => 'You must be logged in.');
+		$result = $adapter->check($user, $request, compact('rules'));
 		$this->assertEqual($expected, $result);
 
-		// Single rule (single array), but it should fail because user is an empty array
 		$rules = array('rule' => 'allowAnyUser', 'message' => 'You must be logged in.');
-		$expected = array(
-			'rule' => 'allowAnyUser', 'message' => 'You must be logged in.', 'redirect' => '/'
-		);
-		$result = Access::check('test_rulebased', array(), $request, array('rules' => $rules));
+		$expected = array('rule' => 'allowAnyUser', 'message' => 'You must be logged in.');
+		$result = $adapter->check(array(), $request, compact('rules'));
 		$this->assertEqual($expected, $result);
 
-		// and if false instead of an empty array (because one might typically run Auth:check()
-		// which could return false)
-		$result = Access::check('test_rulebased', false, $request, array('rules' => $rules));
+		$result = $adapter->check(false, $request, compact('rules'));
 		$this->assertEqual($expected, $result);
+	}
 
-		// No rules
-		$expected = array(
-			'rule' => false,
-			'message' => 'You are not permitted to access this area.',
-			'redirect' => '/'
-		);
-		$result = Access::check('test_rulebased', array('username' => 'Tom'), $request);
+	/**
+	 * Test access checking with no passed or defined rules.
+	 */
+	public function testCheckNoRules() {
+		$user = array('username' => 'Tom');
+		$request = new Request();
+		$adapter = new Rules();
+
+		$expected = array('rule' => false, 'message' => null, 'redirect' => null);
+		$result = $adapter->check($user, $request);
 		$this->assertEqual($expected, $result);
+	}
 
-		// Adding a rule "on the fly" by passing a closure, this rule should pass
+	/**
+	 * Tests checking against a list of rules that are passed on the fly.
+	 */
+	public function testPassingRules() {
+		$user = array('username' => 'Tom');
+		$request = new Request();
+		$adapter = new Rules();
+
 		$rules = array(
-			array(
-				'rule' => function($user, $request, $options) {
-					return $user['username'] == 'Tom';
-				},
-				'message' => 'Access denied.'
-			)
+			array('message' => 'Access denied.', 'rule' => function($user, $request, $options) {
+				return $user['username'] == 'Tom';
+			})
 		);
 		$expected = array();
-		$result = Access::check('test_rulebased', array('username' => 'Tom'), $request, array(
-			'rules' => $rules
-		));
+		$result = $adapter->check($user, $request, compact('rules'));
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testAdd() {
 		$request = new Request();
+		$user = array('username' => 'Tom');
+		$adapter = new Rules();
 
-		// The add() method to add a rule
-		Access::adapter('test_rulebased')->add('testDeny', function($user, $request, $options) {
+		$adapter->add('testDeny', function($user, $request, $options) {
 			return false;
 		});
 
 		$rules = array(array('rule' => 'testDeny', 'message' => 'Access denied.'));
-		$expected = array('rule' => 'testDeny', 'message' => 'Access denied.', 'redirect' => '/');
-		$result = Access::check('test_rulebased', array('username' => 'Tom'), $request, array(
-			'rules' => $rules
-		));
+		$expected = array('rule' => 'testDeny', 'message' => 'Access denied.');
+		$result = $adapter->check($user, $request, compact('rules'));
 		$this->assertEqual($expected, $result);
 
-		// Make sure the rule got added to the $_rules property
-		$this->assertTrue(is_callable(Access::adapter('test_rulebased')->get('testDeny')));
-		$this->assertTrue(is_array(Access::adapter('test_rulebased')->get()));
+		$this->assertTrue(is_callable($adapter->get('testDeny')));
+		$this->assertEqual($adapter->get('testDeny'), $adapter->getRules('testDeny'));
+
+		$rules = $adapter->get();
+		$this->assertTrue(is_array($rules));
+		$this->assertTrue(in_array('testDeny', array_keys($rules)));
+	}
+
+	/**
+	 * Tests that calls only fail when all rules fail if `'allowAny'` is set.
+	 */
+	public function testAllowAnyRule() {
+		$request = new Request();
+		$adapter = new Rules();
+		$user = array('username' => 'Tom');
+
+		$rules = array(
+			array('rule' => 'allowAll', 'message' => 'Access denied.'),
+			array('rule' => 'denyAll', 'message' => 'Access denied.')
+		);
+		$result = $adapter->check($user, $request, compact('rules'));
+		$this->assertEqual(array('rule' => 'denyAll', 'message' => 'Access denied.'), $result);
+
+		$adapter = new Rules(array('allowAny' => true));
+		$result = $adapter->check($user, $request, compact('rules'));
+		$this->assertEqual(array(), $result);
+
+		$result = $adapter->check($user, $request, array('rules' => array('denyAll', 'allowAll')));
+		$this->assertEqual(array(), $result);
+	}
+
+	/**
+	 * Tests that checks against invalid rules return an invalid rule array.
+	 */
+	public function testInvalidRule() {
+		$request = new Request();
+		$adapter = new Rules();
+		$user = array('username' => 'Tom');
+
+		$result = $adapter->check($user, $request, array('rules' => array('badness')));
+		$this->assertEqual(array('rule' => 'badness'), $result);
 	}
 }
 
