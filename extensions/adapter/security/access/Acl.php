@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Lithium: the most rad php framework
  *
@@ -17,18 +16,25 @@ use li3_access\models\Aros;
 use li3_access\models\Permissions;
 use li3_access\security\Access;
 
+/**
+ * The `Acl` database adapter.
+ */
 class Acl extends \lithium\core\Object {
 
 	/**
 	 * Holds all permission of $requester
-	 * @var type 
+	 * @var array 
 	 */
-	private $_permissions = array();
+	protected $_permissions = array();
+	
+	public $permKeys = array(
+		'_allow'
+	);
 
 	/**
-	 * The `Acl` database adapter.
+	 * Checks if the given `$requester` has access to action `$request`
 	 *
-	 * @param mixed $user The user data array that holds all necessary information about
+	 * @param mixed $requester The user data array that holds all necessary information about
 	 *        the user requesting access. Or false (because Auth::check() can return false).
 	 *        This is an optional parameter, bercause we will fetch the users data trough Auth
 	 *        seperately.
@@ -58,22 +64,69 @@ class Acl extends \lithium\core\Object {
 	}
 
 	/**
+	 * A pass-through method called by `Auth`. Returns the value of `$data`, which is written to
+	 * a user's session. When implementing a custom adapter, this method may be used to modify or
+	 * reject data before it is written to the session.
+	 *
+	 * @param array $data User data to be written to the session.
+	 * @param array $options Adapter-specific options. Not implemented in the `Form` adapter.
+	 * @return array Returns the value of `$data`.
+	 */
+	public function set($data, array $options = array()) {
+		return $data;
+	}
+
+	/**
+	 * Called by `Auth` when a user session is terminated. Not implemented in the `Form` adapter.
+	 *
+	 * @param array $options Adapter-specific options. Not implemented in the `Form` adapter.
+	 * @return void
+	 */
+	public function clear(array $options = array()) {
+		
+	}
+
+	/**
+	 * Pass-thru function for ACL allow instance. Allow methods
+	 * are used to grant an ARO access to an ACO.
+	 *
+	 * @param string $aro ARO The requesting object identifier.
+	 * @param string $aco ACO The controlled object identifier.
+	 * @return boolean Success
+	 * @access public
+	 */
+	public static function allow($aro, $aco) {
+		return false;
+	}
+
+	/**
+	 * Pass-thru function for ACL deny instance. Deny methods
+	 * are used to remove permission from an ARO to access an ACO.
+	 *
+	 * @param string $aro ARO The requesting object identifier.
+	 * @param string $aco ACO The controlled object identifier.
+	 * @return boolean Success
+	 * @access public
+	 */
+	public static function deny($aro, $aco) {
+		return false;
+	}
+
+	/**
 	 * Checks if the given $aro has access to action $action in $aco
 	 *
 	 * @param string $aro ARO The requesting object identifier.
 	 * @param string $aco ACO The controlled object identifier.
 	 * @return boolean Success (true if ARO has access to action in ACO, false otherwise)
-	 * @access public
+	 * @access private
 	 * @link http://book.cakephp.org/view/1249/Checking-Permissions-The-ACL-Component
 	 */
-	private static function _check($aro, $aco) {
+	protected static function _check($aro, $aco) {
 		if ($aro == null || $aco == null) {
 			return false;
 		}
 
-		$permKeys = array(
-			'_allow'
-		);
+		$permKeys = $this->permKeys;
 
 		$aroPath = Aros::node($aro);
 		$acoPath = Acos::node($aco);
@@ -130,43 +183,6 @@ class Acl extends \lithium\core\Object {
 				}
 			}
 		}
-		return false;
-	}
-
-	/**
-	 * A pass-through method called by `Auth`. Returns the value of `$data`, which is written to
-	 * a user's session. When implementing a custom adapter, this method may be used to modify or
-	 * reject data before it is written to the session.
-	 *
-	 * @param array $data User data to be written to the session.
-	 * @param array $options Adapter-specific options. Not implemented in the `Form` adapter.
-	 * @return array Returns the value of `$data`.
-	 */
-	public function set($data, array $options = array()) {
-		return $data;
-	}
-
-	/**
-	 * Called by `Auth` when a user session is terminated. Not implemented in the `Form` adapter.
-	 *
-	 * @param array $options Adapter-specific options. Not implemented in the `Form` adapter.
-	 * @return void
-	 */
-	public function clear(array $options = array()) {
-		
-	}
-
-	/**
-	 * undocument
-	 */
-	public static function allow($aro, $aco) {
-		return false;
-	}
-
-	/**
-	 * undocument
-	 */
-	public static function deny($aro, $aco) {
 		return false;
 	}
 

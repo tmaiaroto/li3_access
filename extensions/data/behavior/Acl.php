@@ -98,7 +98,7 @@ class Acl extends \lithium\core\StaticObject {
 	protected static function _afterDelete($self, $params, $delete) {
 		extract(static::$_configurations[$self]);
 		//@todo extract it
-		$node = Set::extract($self::node($model), "0.{$type}.id");
+		$node = Set::extract($self::node($model), "0/{$type}/id");
 		if (!empty($node)) {
 			$type::delete($node);
 		}

@@ -1,16 +1,15 @@
 <?php
+
 /**
  * Acl superclass allow use methods `node` in Aros and Acos tree.
  *
  * This class use of external libraries (lastest version from my github)
  * li3_tree behavior https://github.com/agborkowski/li3_tree
  * li3_behavior https://github.com/agborkowski/li3_behavior
+ * @todo rename class to Node
  */
 namespace li3_access\extensions\data\model;
 
-//use lithium\core\Libraries;
-//use UnexpectedValueException;
-//use lithium\security\Password;
 use lithium\core\Libraries;
 use lithium\core\ClassNotFoundException;
 use lithium\core\ConfigException;
