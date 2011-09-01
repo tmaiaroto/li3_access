@@ -173,9 +173,10 @@ ACL adapter uses 2 plugin libraries:
 ### Sql database
 
 3 tables must be insert to database:
-- aros => Aro
-- acos => Aco
-- aros_acors => Permision
+
+- aros
+- acos
+- aros_acors
 
 ### Auth adapter config
 
@@ -192,6 +193,7 @@ Auth::config(array(
 ### Access adapter config
 
 easy config params `'adapter'` set to `acl`, and get user credentials from `Auth` adapter
+
 ````
 Access::config(array(
 	'acl' => array(
@@ -256,14 +258,14 @@ class Roles extends \li3_behaviors\extensions\Model {
 
 ### Check access and authorization by `Dispatcher` and `'_callable'` filter support 3 steps:
 
-- 1st step get from array at '`controller->publicActions`' list of action available
+- 1st step get from array at `controller->publicActions` list of action available
   without check authentication and authorization, when action is public or it's a 'test'
   or 'li3_docs.ApiBrowser' return controller without A&A
-- 2nd step uses `'Auth::check('user')'` to get user credentials, is Requester (ARO) for ACL
+- 2nd step uses `Auth::check('user')` to get user credentials, is Requester (ARO) for ACL
 - 3d step is authentication user (ARO) to resource (ACO) by Access Control List in this example
-  ARO is requester get in 2nd step by `'Auth::check('user')'`
+  ARO is requester get in 2nd step by `Auth::check('user')`
   ACO is path of mask `controllers/{controller}/{action}` this path is a binary tree stores in SQL database
-  when user (ARO) have permission to (ACO) '`Dispatcher`' return controller
+  when user (ARO) have permission to (ACO) `Dispatcher` return controller
 
 Dispatcher::applyFilter('_callable', function($self, $params, $chain) {
 
@@ -353,10 +355,12 @@ Github: [rich97](https://github.com/rich97/li3_access)
 
 Website: [Enrich.it](http://www.enrich.it)
 
-## rich97
+## AgBorkowski
 
 add Acl adapter and behaviors
 
 Github: [AgBorkowski](https://github.com/agborkowski/li3_access)
 
-Website: [Holicon s](http://www.holicon.pl)
+Website: [Holicon Sp. z o.o.](http://holicon.pl)
+
+Blog: [blog.aeonmedia.eu](http://blog.aeonmedia.eu)
