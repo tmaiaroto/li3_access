@@ -192,7 +192,7 @@ Auth::config(array(
 
 ### Access adapter config
 
-easy config params `'adapter'` set to `acl`, and get user credentials from `Auth` adapter
+easy config params `adapter` set to `acl`, and get user credentials from `Auth` adapter
 
 ````
 Access::config(array(
@@ -267,6 +267,7 @@ class Roles extends \li3_behaviors\extensions\Model {
   ACO is path of mask `controllers/{controller}/{action}` this path is a binary tree stores in SQL database
   when user (ARO) have permission to (ACO) `Dispatcher` return controller
 
+````
 Dispatcher::applyFilter('_callable', function($self, $params, $chain) {
 
 	$ctrl = $chain->next($self, $params, $chain);
@@ -328,6 +329,7 @@ Dispatcher::applyFilter('_callable', function($self, $params, $chain) {
 	}
 	return $ctrl;
 });
+````
 
 ## Credits
 
