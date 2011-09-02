@@ -174,6 +174,27 @@ class RulesTest extends \lithium\test\Unit {
 		$result = $adapter->check($user, $request, array('rules' => array('badness')));
 		$this->assertEqual(array('rule' => 'badness'), $result);
 	}
+
+	/**
+	 * Tests that options passed to `Rules::check()` are passed to each rule doing the checking.
+	 */
+	public function testOptionsPassedToRule() {
+		$request = new Request();
+		$user    = array('username' => 'Tom');
+		$adapter = new Rules(array(
+			'rules' => array(
+				'foobar' => function($user, $request, $options) {
+					return $options['foo'] == 'bar';
+				}
+			),
+			'default' => array('foobar')
+		));
+
+		$result = $adapter->check($user, $request, array('foo' => 'baz'));
+		$this->assertEqual(array('rule' => 'foobar', 'foo' => 'baz'), $result);
+		$result = $adapter->check($user, $request, array('foo' => 'bar'));
+		$this->assertEqual(array(), $result);
+	}
 }
 
 ?>

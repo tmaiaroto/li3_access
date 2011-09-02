@@ -115,7 +115,7 @@ class Rules extends \lithium\core\Object {
 			if (is_string($rule)) {
 				$rule = compact('rule');
 			}
-			$ruleResult = $this->_call($rule, $user, $request);
+			$ruleResult = $this->_call($rule, $user, $request, $options);
 
 			switch (true) {
 				case ($ruleResult === false && $options['allowAny']):
@@ -137,10 +137,11 @@ class Rules extends \lithium\core\Object {
 	 * @param array $rule The rule definition array.
 	 * @param mixed $user The value representing the user making the request. Usually an array.
 	 * @param mixed $request The value representing request data or the object being access.
+	 * @param array $options Any options passed to `check()`.
 	 * @return boolean Returns `true` if the call to the rule was successful, otherwise `false` if
 	 *         the call failed, or if a callable rule was not found.
 	 */
-	protected function _call($rule, $user, $request) {
+	protected function _call($rule, $user, $request, array $options) {
 		$callable = null;
 
 		switch (true) {
@@ -151,7 +152,7 @@ class Rules extends \lithium\core\Object {
 				$callable = $this->_rules[$rule['rule']];
 			break;
 		}
-		return is_callable($callable) ? call_user_func($callable, $user, $request, $rule) : false;
+		return $callable ? call_user_func($callable, $user, $request, $rule + $options) : false;
 	}
 
 	/**
