@@ -195,6 +195,33 @@ class RulesTest extends \lithium\test\Unit {
 		$result = $adapter->check($user, $request, array('foo' => 'bar'));
 		$this->assertEqual(array(), $result);
 	}
+
+	/**
+	 * Tests that user information is automatically retrieved via the closure in the `'user'`
+	 * config.
+	 */
+	public function testAutoUser() {
+		$request = new Request();
+		$user    = array('username' => 'Tom');
+		$adapter = new Rules(array(
+			'rules' => array(
+				'user' => function($user, $request, $options) {
+					return isset($user['username']) && $user['username'] == 'Tom';
+				}
+			),
+			'default' => array('user'),
+			'user' => function() use ($user) { return $user; }
+		));
+
+		$result = $adapter->check($user, $request);
+		$this->assertEqual(array(), $result);
+
+		$result = $adapter->check(null, $request);
+		$this->assertEqual(array(), $result);
+
+		$result = $adapter->check(array('username' => 'Bob'), $request);
+		$this->assertEqual(array('rule' => 'user'), $result);
+	}
 }
 
 ?>

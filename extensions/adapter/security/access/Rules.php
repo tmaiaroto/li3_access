@@ -45,7 +45,12 @@ class Rules extends \lithium\core\Object {
 	 *                the check to succeed. Defaults to `false`.
 	 */
 	public function __construct(array $config = array()) {
-		$defaults = array('rules' => array(), 'default' => array(), 'allowAny' => false);
+		$defaults = array(
+			'rules' => array(),
+			'default' => array(),
+			'allowAny' => false,
+			'user' => function() {}
+		);
 		parent::__construct($config + $defaults);
 	}
 
@@ -102,6 +107,7 @@ class Rules extends \lithium\core\Object {
 			'allowAny' => $this->_config['allowAny']
 		);
 		$options += $defaults;
+		$user = $user ?: $this->_config['user']();
 
 		if (!$options['rules']) {
 			$base = array('rule' => false, 'message' => null, 'redirect' => null);
