@@ -74,7 +74,7 @@ class Acl extends \lithium\core\StaticObject {
 
 		if ($exist) {
 			$node = self::node($self, array('model' => $self::meta('name'), 'foreign_key' => $entity->data('id')));
-			$data['id'] = isset($node[0][$type]['id']) ? $node[0][$type]['id'] : null;
+			$data['id'] = isset($node[0]['id']) ? $node[0]['id'] : null;
 		}
 		/*
 		 * Warning: AclNode::node() - Couldn't find Aros node identified by "Array ( [Aros0.model] => Users [Aros0.foreign_key] => 168 ) " in /Users/nim/Sites/holicon/pwi2/libraries/li3_access/extensions/models/Acl.php on line 166

@@ -126,7 +126,9 @@ class Acl extends \lithium\core\Object {
 			return false;
 		}
 
-		$permKeys = $this->permKeys;
+		$permKeys = array(
+			'_allow'
+		);
 
 		$aroPath = Aros::node($aro);
 		$acoPath = Acos::node($aco);
