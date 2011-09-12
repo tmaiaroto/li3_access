@@ -79,7 +79,7 @@ class Acl extends \lithium\console\Command {
 		if(isset($root[0]) && $root = $root[0]['id'] > 0){
 			foreach($controllers as $controller){
 				$methods = (array) Inspector::methods($controller, 'extents');
-				$alias = end(explode('\\', $controller));
+				$alias = str_replace('Controller', '', end(explode('\\', $controller)));
 				//controllers
 				$parent = Acos::first(array('conditions' => array('alias' => $alias)));
 				if($parent && $parent->exists()){
