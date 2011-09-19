@@ -17,12 +17,52 @@ class Rules extends \lithium\core\Object {
 	protected $_rules = array();
 
 	/**
+	 * Lists a subset of rules defined in `$_rules` which should be checked by default on every
+	 * call to `check()` (unless overridden by passed options).
+	 *
+	 * @var array
+	 */
+	protected $_default = array();
+
+	/**
+	 * Configuration that will be automatically assigned to class properties.
+	 *
+	 * @var array
+	 */
+	protected $_autoConfig = array('rules', 'default');
+
+	/**
+	 * Sets default adapter configuration.
+	 *
+	 * @param array $config Adapter configuration, which includes the following default options:
+	 *              - `'rules'` _array_: An array of rules to be added to the default rules
+	 *                initialized by the adapter. See the `'rules'` option of the `check()` method
+	 *                for more information on the acceptable format of these values.
+	 *              - `'default'` _array_: The default list of rules to use when performing access
+	 *                checks.
+	 *              - `'allowAny'` _boolean_: If set to `true`, access checks will return successful
+	 *                if _any_ access rule passes. Otherwise, all are required to pass in order for
+	 *                the check to succeed. Defaults to `false`.
+	 */
+	public function __construct(array $config = array()) {
+		$defaults = array(
+			'rules' => array(),
+			'default' => array(),
+			'allowAny' => false,
+			'user' => function() {}
+		);
+		parent::__construct($config + $defaults);
+	}
+
+	/**
 	 * Initializes default rules to use.
 	 *
 	 * @return void
 	 */
 	protected function _init() {
-		$this->_rules = array(
+		parent::_init();
+
+		$this->_rules += array(
 			'allowAll' => function() {
 				return true;
 			},
@@ -62,56 +102,63 @@ class Rules extends \lithium\core\Object {
 	 *         if denied.
 	 */
 	public function check($user, $request, array $options = array()) {
-		$defaults = array('rules' => array());
+		$defaults = array(
+			'rules' => $this->_config['default'],
+			'allowAny' => $this->_config['allowAny']
+		);
 		$options += $defaults;
+		$user = $user ?: $this->_config['user']();
 
 		if (!$options['rules']) {
-			return array(
-				'rule' => false,
-				'message' => $options['message'],
-				'redirect' => $options['redirect']
-			);
+			$base = array('rule' => false, 'message' => null, 'redirect' => null);
+			return array_diff_key($options, $defaults) + $base;
 		}
 
-		// If a single rule was passed, wrap it in an array so it can be iterated as if
-		// there were multiple
 		$rules = (isset($options['rules']['rule'])) ? array($options['rules']) : $options['rules'];
 		$result = array();
 
-		// Loop through all the rules. They must all pass.
 		foreach ($rules as $rule) {
-			// make sure the rule is set and is a string to check for a closure to call or a
-			// closure itself.
-			$hasRule = (
-				isset($rule['rule']) &&
-				(is_string($rule['rule']) || is_callable($rule['rule']))
-			);
-
-			if (!$hasRule) {
-				continue;
+			if (is_string($rule)) {
+				$rule = compact('rule');
 			}
+			$ruleResult = $this->_call($rule, $user, $request, $options);
 
-			if ($this->_call($rule, $user, $request) === false) {
-				$result['rule'] = $rule['rule'];
-				$result['message'] = isset($rule['message']) ? $rule['message'] : $options['message'];
-				$result['redirect'] = isset($rule['redirect']) ? $rule['redirect'] : $options['redirect'];
+			switch (true) {
+				case ($ruleResult === false && $options['allowAny']):
+					$result = $rule + array_diff_key($options, $defaults);
+				break;
+				case ($ruleResult === false):
+					return $rule + array_diff_key($options, $defaults);
+				case ($ruleResult !== false && $options['allowAny']):
+					return array();
 			}
 		}
 		return $result;
 	}
 
-	protected function _call($rule, $user, $request) {
-		// The added rule closure will be passed the user data
-		if (in_array($rule['rule'], array_keys($this->_rules))) {
-			// The rule closure will be passed the user, request and the rule array itself
-			// which could contain extra data required by the specific rule.
-			return call_user_func($this->_rules[$rule['rule']], $user, $request, $rule);
+	/**
+	 * Extracts a callable rule either from a rule definition assigned as a closure, or a string
+	 * reference to a rule defined in a key in the `$_rules` array.
+	 *
+	 * @param array $rule The rule definition array.
+	 * @param mixed $user The value representing the user making the request. Usually an array.
+	 * @param mixed $request The value representing request data or the object being access.
+	 * @param array $options Any options passed to `check()`.
+	 * @return boolean Returns `true` if the call to the rule was successful, otherwise `false` if
+	 *         the call failed, or if a callable rule was not found.
+	 */
+	protected function _call($rule, $user, $request, array $options) {
+		$callable = null;
+
+		switch (true) {
+			case (is_callable($rule['rule'])):
+				$callable = $rule['rule'];
+			break;
+			case (in_array($rule['rule'], array_keys($this->_rules))):
+				$callable = $this->_rules[$rule['rule']];
+			break;
 		}
-		if (is_callable($rule['rule'])) {
-			// The rule can be defined as a closure on the fly, no need to call add()
-			return call_user_func($rule['rule'], $user, $request, $rule);
-		}
-		return false;
+		return $callable ? call_user_func($callable, $user, $request, $rule + $options) : false;
 	}
 
 	/**
