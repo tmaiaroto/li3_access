@@ -5,6 +5,7 @@ namespace li3_access\extensions\data\behavior;
 //use li3_access\models\Acos;
 //use li3_access\models\Aros;
 use lithium\core\Libraries;
+use lithium\util\Set;
 
 class Acl extends \lithium\core\StaticObject {
 
@@ -97,10 +98,15 @@ class Acl extends \lithium\core\StaticObject {
 	 */
 	protected static function _afterDelete($self, $params, $delete) {
 		extract(static::$_configurations[$self]);
-		//@todo extract it
-		$node = Set::extract($self::node($model), "0/{$type}/id");
+		$entity = $params['entity'];
+		$node = self::node($self, array('model' => $self::meta('name'), 'foreign_key' => $entity->data('id')));
 		if (!empty($node)) {
-			$type::delete($node);
+			$model = Libraries::locate('models', $type, array('libraries' => 'li3_access'));
+			if (empty($model)) {
+				throw new ClassNotFoundException(sprintf("Model class '%s' not found in access\acl\Acl::node() when trying to bind %s object", $model, $type));
+				return null;
+			}
+			$model::find($node[0]['id'])->delete();
 		}
 	}
 
