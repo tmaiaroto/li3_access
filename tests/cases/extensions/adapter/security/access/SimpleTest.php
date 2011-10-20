@@ -16,7 +16,7 @@ class SimpleTest extends \lithium\test\Unit {
 
 	public function setUp() {
 		Access::config(array(
-			'test_access' => array('adapter' => 'Acl')
+			'test_access' => array('adapter' => 'Simple')
 		));
 	}
 
