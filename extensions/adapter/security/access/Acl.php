@@ -8,13 +8,13 @@
 
 namespace li3_access\extensions\adapter\security\access;
 
-use lithium\security\Auth;
+//use lithium\security\Auth;
 use lithium\core\ConfigException;
 use lithium\util\Set;
 use li3_access\models\Acos;
 use li3_access\models\Aros;
 use li3_access\models\Permissions;
-use li3_access\security\Access;
+//use li3_access\security\Access;
 
 /**
  * The `Acl` database adapter.
@@ -26,41 +26,139 @@ class Acl extends \lithium\core\Object {
 	 * @var array 
 	 */
 	protected $_permissions = array();
-	
+
+	/**
+	 * Holds all permission of $requester
+	 * @var array 
+	 */
+	protected static $_aroPath = false;
+
+	/**
+	 * Holds all permission of $requester
+	 * @var array 
+	 */
+	protected static $_acoPath = false;
+
 	public $permKeys = array(
 		'_allow'
 	);
 
+	protected $_model = array();
+	protected $_handlers = array();
+	protected $_autoConfig = array('model', 'handlers');
+
+	public function __construct(array $config = array()) {
+		$defaults = array(
+			'model' => array(
+				'Aros' => 'app\models\aros',
+				'Acos' => 'app\models\acos',
+				'Permissions' =>'app\models\aros_acos'
+			),
+			'defaultNoUser' => array(),
+			'defaultUser' => array(),
+			'userIdentifier' => 'id'
+		);
+		parent::__construct($config + $defaults);
+		$this->_handlers += array(
+			'serialize' => function($data) {
+				return serialize($data);
+			},
+			'unserialize' => function($data) {
+				return unserialize($data);
+			}
+		);
+	}
+	
 	/**
 	 * Checks if the given `$requester` has access to action `$request`
 	 *
 	 * @param mixed $requester The user data array that holds all necessary information about
-	 *        the user requesting access. Or false (because Auth::check() can return false).
-	 *        This is an optional parameter, bercause we will fetch the users data trough Auth
-	 *        seperately.
+	 * the user requesting access. Or false (because Auth::check() can return false).
+	 * This is an optional parameter, bercause we will fetch the users data trough Auth
+	 * seperately.
 	 * @param object $request The Lithium Request object.
 	 * @param array $options An array of additional options for the _getRolesByAuth method.
 	 * @return Array An empty array if access is allowed and an array with reasons for denial if denied.
 	 */
 	public function check($requester, $request, array $options = array()) {
-		$defaultOptions = array(
-			'message' => '',
-			'redirect' => ''
-		);
+		$defaults = array();
+		$options += $defaults;
 
-		$options = array_merge($defaultOptions,$options);
-		if(!empty($requester)){
+		if (!empty($requester)){
 			$model = isset($this->_config['credentials']['model']) ? $this->_config['credentials']['model'] : null;
-			if(!empty($model)){
+			if (!empty($model)){
 				$requester = array($model => $requester);
-			}
-
-			if($check = self::_check($requester, $request, $options)){
-				return array('check'=> $check) + $options;
 			}
 		}
 
-		return array();
+		return self::_check($requester, $request, $options);
+	}
+
+	/**
+	 * Get perms
+	 *
+	 * @param string $aro 
+	 * @param string $aco 
+	 * @return void
+	 * @author Andrzej Grzegorz Borkowski
+	 */
+	public function get($aro, $aco) {
+		$resources = array();
+
+		$check = self::_check($aro, $aco);
+ 
+		$aroPath = self::$_aroPath;
+		$acoPath = self::$_acoPath;
+
+		$acoNode = $acoPath[0];
+
+		$acoRoot = Acos::findById($acoNode['id']);
+		if(!$acoRoot){
+			return $resources;
+		}
+
+		if($check){
+			return array($acoRoot->data('alias'));
+		}
+
+		$resources = array($acoRoot->data('alias') => array());
+		// aro_id => aco_id
+		$acos = Acos::find('all', array(
+			'conditions' => array(
+				'lft' => array('>' => $acoRoot->data('lft')),
+				'rght' => array('<' => $acoRoot->data('rght'))
+			),
+			'order' => array('lft' => 'asc'))
+		);
+		if(!$acos){
+			return $resources;
+		}
+		$acosIDs = array_keys($acos->to('array'));
+		$count = count($aroPath);
+		//przelec po arosach user/rola
+		$permAlias = Permissions::meta('name');
+		$acoAlias = Acos::meta('name');
+		for ($i = 0; $i < $count; $i++) {
+			$perms = Permissions::find('all', array(
+				'conditions' => array(
+					"{$permAlias}.aro_id" => $aroPath[$i]['id'],
+					"{$permAlias}.aco_id" => $acosIDs
+				),
+				'order' => "{$acoAlias}.lft DESC",
+				'with' => array('Acos'),
+				'recursive' => 0
+			));
+			if($perms){
+				$resources[$acoRoot->data('alias')] = array_merge(
+					$resources[$acoRoot->data('alias')],
+					Set::extract(array_values($perms->to('array')), "/aco/foreign_key")
+				);
+			}
+		}
+		if(empty($resources[$acoRoot->data('alias')])){
+			$resources[$acoRoot->data('alias')] = false;
+		}
+		return $resources;
 	}
 
 	/**
@@ -130,8 +228,8 @@ class Acl extends \lithium\core\Object {
 			'_allow'
 		);
 
-		$aroPath = Aros::node($aro);
-		$acoPath = Acos::node($aco);
+		$aroPath = self::$_aroPath = Aros::node($aro);
+		$acoPath = self::$_acoPath = Acos::node($aco);
 
 		if (empty($aroPath) || empty($acoPath)) {
 			throw new \Exception("Auth\Acl::check() - Failed ARO/ACO node lookup in permissions check.  Node references:\nAro: " . print_r($aro, true) . "\nAco: " . print_r($aco, true));
@@ -151,9 +249,9 @@ class Acl extends \lithium\core\Object {
 		$acoIDs = Set::extract($acoPath, '/id');
 
 		$count = count($aroPath);
+		$permAlias = Permissions::meta('name');
+		$acoAlias = Acos::meta('name');
 		for ($i = 0; $i < $count; $i++) {
-			$permAlias = Permissions::meta('name');
-
 			$perms = Permissions::find('first', array(
 				'conditions' => array(
 					//"{$permAlias}.aro_id" => $aroPath[$i][Aros::meta('name')]['id'],
@@ -161,7 +259,7 @@ class Acl extends \lithium\core\Object {
 					"{$permAlias}.aro_id" => $aroPath[$i]['id'],
 					"{$permAlias}.aco_id" => $acoIDs
 				),
-				'order' => Acos::meta('name') . ".lft DESC",
+				'order' => $acoAlias .'.lft DESC',
 				'with' => array('Acos'),
 				'recursive' => 0
 			));
@@ -169,7 +267,7 @@ class Acl extends \lithium\core\Object {
 				continue;
 			}else{
 				$perms = Set::extract($perms->data(), '/');
-				//foreach ($perms as $perm) {
+					//foreach ($perms as $perm) {
 					foreach ($permKeys as $key) {
 						if (!empty($perms)) {
 							if ($perms[$key] == -1) {
@@ -177,7 +275,7 @@ class Acl extends \lithium\core\Object {
 							} elseif ($perms[$key] == 1) {
 								$inherited[$key] = 1;
 							}
-						}
+					}
 					//}
 					if (count($inherited) === count($permKeys)) {
 						return true;

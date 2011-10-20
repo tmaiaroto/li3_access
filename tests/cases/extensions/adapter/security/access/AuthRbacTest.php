@@ -11,7 +11,6 @@ namespace li3_access\tests\cases\extensions\adapter\security\access;
 
 use lithium\net\http\Request;
 use lithium\security\Auth;
-
 use li3_access\security\Access;
 
 class AuthRbacTest extends \lithium\test\Unit {

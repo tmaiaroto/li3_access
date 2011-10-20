@@ -111,10 +111,9 @@ class Acl extends \li3_behaviors\extensions\Model {
 		} elseif (is_array($ref) && !(isset($ref['model']) && isset($ref['foreign_key']))) {
 			//associate row
 			$name = key($ref);
-
 			$model = Libraries::locate('models', $name);
 			if (empty($model)) {
-				throw new ClassNotFoundException(sprintf("Model class '%s' not found in access\acl\Acl::node() when trying to bind %s object", $model, $type));
+				throw new ClassNotFoundException(sprintf("Model class '%s' not found in access\acl\Acl::node() when trying to bind %s object", $name, $type));
 				return null;
 			}
 

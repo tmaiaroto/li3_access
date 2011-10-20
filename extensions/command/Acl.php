@@ -21,6 +21,8 @@ use lithium\core\ClassNotFoundException;
 use li3_access\models\Acos;
 use li3_access\models\Aros;
 use app\models\Users;
+use app\models\Queue;
+
 /**
  * The `acl` command allows you to rapidly develop your permission in Aros Acos trees.
  *
@@ -39,6 +41,7 @@ class Acl extends \lithium\console\Command {
 		$this->header('Access Control List Managament');
 
 		$this->out('[refresh] add controllers and actions to atos tree');
+		$this->out('[syncQueue] add controllers and actions to atos tree');
 
 		$command = $this->in('put command', array('choices' => array('refresh')));
 
@@ -69,7 +72,6 @@ class Acl extends \lithium\console\Command {
 
 	/**
 	 * refresh aco tree
-	 *
 	 */
 	protected function refresh() {
 		$this->header('Sunchronize ACO tree');
@@ -153,6 +155,45 @@ class Acl extends \lithium\console\Command {
 				$this->out("[user] {$user->data('login')} found in ARO (id:{$user->data('id')}), skipping");
 			}
 		}
+	}
+
+	/**
+	 * refresh aco tree
+	 */
+	protected function syncQueue() {
+		$this->header('Sunchronize ACO Queues tree');
+		$root = Acos::node('models/Queue');
+		$defaultsSettings = array(
+			'parent_id' => $root[0]['id'], //1. Role.7 => users @todo its hardcode role id
+			'model' => Queue::meta('name')
+		);
+		$data = Queue::find('all');
+		foreach ($data as $queue){
+			$data = Acos::first(array(
+				'conditions' => array(
+					'model' => 'Queues',
+					'foreign_key' => $queue->data('id')
+				)
+			));
+			if(!$data || !$data->exists()){
+				$this->out("[queue] {$queue->data('name')} not found, creating ARO");
+				$node = Acos::create();
+				if($node->save(array(
+					'parent_id' => $defaultsSettings['parent_id'],
+					'model' => $defaultsSettings['model'],
+					'foreign_key' => $queue->data('id'),
+					'alias' => $queue->data('name')
+				))){
+					$this->out("[node] {$node->data('alias')} add to ARO (fk:{$node->data('foreign_key')}, p:{$node->data('parent_id')}) success");
+				}else{
+					$this->out("[controller] {$alias} add to ACO fail");
+					return false;
+				}
+			}else{
+				$this->out("[user] {$queue->data('name')} found in ARO (id:{$queue->data('id')}), skipping");
+			}
+		}
+		//root
 	}
 }
 ?>
