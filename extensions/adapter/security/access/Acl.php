@@ -47,27 +47,27 @@ class Acl extends \lithium\core\Object {
 	protected $_handlers = array();
 	protected $_autoConfig = array('model', 'handlers');
 
-	public function __construct(array $config = array()) {
-		$defaults = array(
-			'model' => array(
-				'Aros' => 'app\models\aros',
-				'Acos' => 'app\models\acos',
-				'Permissions' =>'app\models\aros_acos'
-			),
-			'defaultNoUser' => array(),
-			'defaultUser' => array(),
-			'userIdentifier' => 'id'
-		);
-		parent::__construct($config + $defaults);
-		$this->_handlers += array(
-			'serialize' => function($data) {
-				return serialize($data);
-			},
-			'unserialize' => function($data) {
-				return unserialize($data);
-			}
-		);
-	}
+// 	public function __construct(array $config = array()) {
+// 		$defaults = array(
+// 			'model' => array(
+// 				'Aros' => 'app\models\aros',
+// 				'Acos' => 'app\models\acos',
+// 				'Permissions' =>'app\models\aros_acos'
+// 			),
+// 			'defaultNoUser' => array(),
+// 			'defaultUser' => array(),
+// 			'userIdentifier' => 'id'
+// 		);
+// 		parent::__construct($config + $defaults);
+// 		$this->_handlers += array(
+// 			'serialize' => function($data) {
+// 				return serialize($data);
+// 			},
+// 			'unserialize' => function($data) {
+// 				return unserialize($data);
+// 			}
+// 		);
+// 	}
 	
 	/**
 	 * Checks if the given `$requester` has access to action `$request`
