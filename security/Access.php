@@ -1,11 +1,12 @@
 <?php
+
 /**
  * li3_access plugin for Lithium: the most rad php framework.
  *
  * @author        Tom Maiaroto
  * @copyright     Copyright 2010, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
-*/
+ */
 
 namespace li3_access\security;
 
@@ -97,6 +98,34 @@ class Access extends \lithium\core\Adaptable {
 			return $self::adapter($name)->check($user, $request, $options);
 		};
 		$params = compact('user', 'request', 'options');
+		return static::_filter(__FUNCTION__, $params, $filter, (array) $config['filters']);
+	}
+
+	/**
+	 * Get permissions
+	 *
+	 * @param string $name The name of the `Access` configuration/adapter to check against.
+	 * @param mixed $user The user data that holds all necessary information about
+	 *        the user requesting access. Or `false` (because Auth::check() can return `false`).
+	 * @param object $request The Lithium Request object.
+	 * @param array $options An array of additional options.
+	 * @return Array An empty array if access is allowed and an array with reasons for denial
+	 *         if denied.
+	 */
+	public static function get($name, $requester, $request, array $options = array()) {
+		$defaults = array();
+		$options += $defaults;
+
+		if (($config = static::_config($name)) === null) {
+			throw new ConfigException("Configuration `{$name}` has not been defined.");
+		}
+		$filter = function($self, $params) use ($name) {
+			$requester = $params['requester'];
+			$request = $params['request'];
+			$options = $params['options'];
+			return $self::adapter($name)->get($requester, $request, $options);
+		};
+		$params = compact('requester', 'request', 'options');
 		return static::_filter(__FUNCTION__, $params, $filter, (array) $config['filters']);
 	}
 }

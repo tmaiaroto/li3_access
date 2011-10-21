@@ -163,6 +163,173 @@ The Access::check() method is filterable. You can apply the filters in the confi
             )
         )
     ));
+## Acl adapter
+
+ACL adapter uses 2 plugin libraries:
+
+- [li3_tree](https://github.com/agborkowski/li3_tree)
+- [li3_behaviors](https://github.com/agborkowski/li3_behaviors)
+
+### Sql database
+
+3 tables must be insert to database:
+
+- aros
+- acos
+- aros_acors
+
+### Auth adapter config
+
+standard configuration you can check it on official lithium php documentation
+
+````
+Auth::config(array(
+	'user' => array(
+			'adapter' => 'Form',
+			'model' => 'Users',
+//....
+````
+
+### Access adapter config
+
+easy config params `adapter` set to `acl`, and get user credentials from `Auth` adapter
+
+````
+Access::config(array(
+	'acl' => array(
+		'adapter' => 'Acl',
+		'credentials' => Auth::config('user')
+	)
+));
+````
+
+### ACL Behaviors
+
+add to your models 'Users'. Thanx to it after you inser or delete users, roles your Aros trees is refresh
+
+````
+//...
+class Users extends \li3_behaviors\extensions\Model {
+
+	protected $_meta = array('source' => 'users');
+
+	protected $_actsAs = array(
+		'Acl' => array('type' => 'requester')
+	);
+
+	public static function parentNode($entity) {
+		
+		$data = $entity->data();
+		if ( !$entity->exists() && empty($data) ) {
+			return null;
+		}
+		$id = $entity->data('role_id');
+		if (empty($id)){
+			//@todo add field constrains
+			$id = self::first($entity->data('id'))->data('role_id');
+		}
+		if (!$id) {
+			//default group IMPORTANT !!! change it when ur Role `id` is diffrent
+			return array('Roles' => array('id' => 7)); //Roles, 7, user
+		} else {
+			return array('Roles' => array('id' => $id));
+		}
+	}
+//...
+````
+
+and 'Roles'
+
+````
+//...
+class Roles extends \li3_behaviors\extensions\Model {
+
+	protected $_meta = array('source' => 'roles');
+
+	protected $_actsAs = array(
+		'Acl' => array('type' => 'requester')
+	);
+
+	public function parentNode() {
+		return null;
+	}
+//...
+````
+
+### Check access and authorization by `Dispatcher` and `'_callable'` filter support 3 steps:
+
+- 1st step get from array at `controller->publicActions` list of action available
+  without check authentication and authorization, when action is public or it's a 'test'
+  or 'li3_docs.ApiBrowser' return controller without A&A
+- 2nd step uses `Auth::check('user')` to get user credentials, is Requester (ARO) for ACL
+- 3d step is authentication user (ARO) to resource (ACO) by Access Control List in this example
+  ARO is requester get in 2nd step by `Auth::check('user')`
+  ACO is path of mask `controllers/{controller}/{action}` this path is a binary tree stores in SQL database
+  when user (ARO) have permission to (ACO) `Dispatcher` return controller
+
+````
+Dispatcher::applyFilter('_callable', function($self, $params, $chain) {
+
+	$ctrl = $chain->next($self, $params, $chain);
+
+	try{
+		// simple
+		if (
+			(isset($ctrl->publicActions) && in_array($params['request']->params['action'], $ctrl->publicActions)) ||
+			in_array($params['request']->params['controller'], array(
+				'lithium\test\Controller',
+				'li3_docs.ApiBrowser'
+			))
+		){
+			return $ctrl;
+		}
+		// check is user loged in
+		$user = Auth::check('user');
+		if(!$user){
+			throw new AccessDeniedException('User not logged in.');
+		}
+		// authentication by ACL trees and mask controllers/{controller}/{action}
+		$aco = 'controllers';
+		if(!empty($params['request']->params['controller'])){
+			$aco .= '/'. ucfirst($params['request']->params['controller']);
+				if(!empty($params['request']->params['action'])){
+					$aco .= '/'. $params['request']->params['action'];
+				}
+		}
+		$access = Access::check('acl', $user, $aco);
+		if(!$access){
+			throw new AccessDeniedException('Permission deined.');
+		}
+		// throw new \Exception('na drzewo');
+	} catch (Exception $e){
+		exit($e);
+	} catch (AccessDeniedException $e){
+		//if is ajax
+		//headers 403 - permission denaind
+		//else
+		//	flash and set redirect
+		echo $e;
+		if (Session::read('redirect')) {
+			$redirect = Session::read('redirect');
+		} else {
+			$redirect = $access['redirect'];
+		}
+
+		if(!in_array($params['request']->url, array('/', 'users/login'))){
+			Session::write('redirect', $params['request']->url);
+		}
+
+		return function(){
+			//catch and set redirect url
+			return new Response(
+				array('location' => '/users/login')
+				//array('location' => $redirect)
+			);
+		};
+	}
+	return $ctrl;
+});
+````
 
 ## Credits
 
@@ -189,3 +356,13 @@ Modified the original Rbac adapter, added some tests and wrote this version of t
 Github: [rich97](https://github.com/rich97/li3_access)
 
 Website: [Enrich.it](http://www.enrich.it)
+
+## AgBorkowski
+
+add Acl adapter and behaviors
+
+Github: [AgBorkowski](https://github.com/agborkowski/li3_access)
+
+Website: [Holicon Sp. z o.o.](http://holicon.pl)
+
+Blog: [blog.aeonmedia.eu](http://blog.aeonmedia.eu)
