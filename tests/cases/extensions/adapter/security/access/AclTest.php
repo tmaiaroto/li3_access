@@ -42,7 +42,7 @@ class AclTest extends \lithium\test\Unit {
 		),
 		'agent1' => array(
 			'Users' => array(
-				'id' => 448
+				'id' => 448 #
 			)
 		),
 		'agent2' => array(
@@ -52,7 +52,7 @@ class AclTest extends \lithium\test\Unit {
 		),
 		'user1' => array(
 			'Users' => array(
-				'id' => 869
+				'id' => 869 #mk7
 			)
 		)
 	);
