@@ -117,11 +117,11 @@ class AuthRbac extends \lithium\core\Object {
                 $value = \lithium\util\Inflector::underscore($value);
             }
 
-            if (!array_key_exists($type, $request->params) || $value !== $request->params[$type]) {
+            if (!array_key_exists($type, $request->params) ||
+				$value !== \lithium\util\Inflector::underscore($request->params[$type])) {
                 return false;
             }
         }
-
         return true;
     }
 
