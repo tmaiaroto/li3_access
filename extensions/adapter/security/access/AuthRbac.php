@@ -4,6 +4,7 @@ namespace li3_access\extensions\adapter\security\access;
 
 use lithium\security\Auth;
 use lithium\core\ConfigException;
+use lithium\util\Inflector;
 
 use li3_access\security\Access;
 
@@ -114,14 +115,14 @@ class AuthRbac extends \lithium\core\Object {
             }
 
             if ($type === 'controller') {
-                $value = \lithium\util\Inflector::underscore($value);
+                $value = Inflector::underscore($value);
             }
 
-            if (!array_key_exists($type, $request->params) || $value !== $request->params[$type]) {
+            if (!array_key_exists($type, $request->params) ||
+				$value !== Inflector::underscore($request->params[$type])) {
                 return false;
             }
         }
-
         return true;
     }
 
