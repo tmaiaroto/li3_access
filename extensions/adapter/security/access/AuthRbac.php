@@ -22,6 +22,8 @@ class AuthRbac extends \lithium\core\Object {
 	/**
 	 * The `Rbac` adapter will iterate trough the rbac data Array.
 	 *
+	 * @todo: write better tests!
+	 *
 	 * @param mixed $requester The user data array that holds all necessary information about
 	 *        the user requesting access. Or false (because Auth::check() can return false).
 	 *        This is an optional parameter, bercause we will fetch the users data trough Auth
@@ -58,7 +60,7 @@ class AuthRbac extends \lithium\core\Object {
 
 			$accessable = static::_is_accessable($role, $request, $options);
 
-			/*
+			/* old Code:
             $accessable = true;
 
             if (($role['allow'] === false) ||
