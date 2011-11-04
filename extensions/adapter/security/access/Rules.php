@@ -191,6 +191,7 @@ class Rules extends \lithium\core\Object {
 
 	/**
 	 * @deprecated
+	 * @param string $name The rule name (optional).
 	 */
 	public function getRules($name = null) {
 		return $this->get($name);
