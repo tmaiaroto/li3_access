@@ -4,8 +4,7 @@ namespace li3_access\extensions\adapter\security\access;
 
 use lithium\security\Auth;
 use lithium\core\ConfigException;
-
-use li3_access\security\Access;
+use lithium\util\Inflector;
 
 class AuthRbac extends \lithium\core\Object {
 
@@ -23,13 +22,14 @@ class AuthRbac extends \lithium\core\Object {
 	/**
 	 * The `Rbac` adapter will iterate trough the rbac data Array.
 	 *
-	 * @param mixed $user The user data array that holds all necessary information about
+	 * @param mixed $requester The user data array that holds all necessary information about
 	 *        the user requesting access. Or false (because Auth::check() can return false).
 	 *        This is an optional parameter, bercause we will fetch the users data trough Auth
 	 *        seperately.
 	 * @param object $request The Lithium Request object.
 	 * @param array $options An array of additional options for the _getRolesByAuth method.
-	 * @return Array An empty array if access is allowed and an array with reasons for denial if denied.
+	 * @return Array An empty array if access is allowed or
+	 *         an array with reasons for denial if denied.
 	 */
     public function check($requester, $request, array $options = array()) {
         if (empty($this->_roles)) {
@@ -55,14 +55,22 @@ class AuthRbac extends \lithium\core\Object {
             if (!static::parseMatch($role['match'], $request)) {
                 continue;
             }
+
+			$accessable = static::_is_accessable($role, $request, $options);
+
+			/*
             $accessable = true;
 
             if (($role['allow'] === false) ||
                 (!static::_hasRole($role['requesters'], $request, $options)) ||
-                (is_array($role['allow']) && !static::_parseClosures($role['allow'], $request, $role))
-            ) {
+                (
+			 		is_array($role['allow']) &&
+					!static::_parseClosures($role['allow'], $request, $role)
+				)
+            ){
                 $accessable = false;
             }
+			*/
 
             if (!$accessable) {
                 $message = !empty($role['message']) ? $role['message'] : $message;
@@ -72,6 +80,23 @@ class AuthRbac extends \lithium\core\Object {
 
         return !$accessable ? compact('message', 'redirect') : array();
     }
+
+	/**
+	 * Checks if the Role grants access
+	 *
+	 * @param array $role Array Set of Roles
+	 * @param mixed $request A lithium Request object.
+	 * @param array $options An array of additional options for the _getRolesByAuth method.
+	 * @return boolean $accessable
+	 */
+	protected static function _is_accessable($role, $request, $options){
+		if (is_array($role['allow'])) {
+			return static::_parseClosures($role['allow'], $request, $role);
+		} else if ($role['allow'] === false) {
+			return false;
+		}
+		return static::_hasRole($role['requesters'], $request, $options);
+	}
 
     /**
      * parseMatch Matches the current request parameters against a set of given parameters.
@@ -114,30 +139,34 @@ class AuthRbac extends \lithium\core\Object {
             }
 
             if ($type === 'controller') {
-                $value = \lithium\util\Inflector::underscore($value);
+                $value = Inflector::underscore($value);
             }
 
-            if (!array_key_exists($type, $request->params) || $value !== $request->params[$type]) {
+			$exists_in_request = array_key_exists($type, $request->params);
+            if (!$exists_in_request || $value !== Inflector::underscore($request->params[$type])) {
                 return false;
             }
         }
-
         return true;
     }
 
     /**
-     * _parseClosures Itterates over an array and runs any anonymous functions it
+     * _parseClosures Iterates over an array and runs any anonymous functions it
      * finds. Returns true if all of the closures it runs evaluate to true. $match
      * is passed by refference and any closures found are removed from it before the
      * method is complete.
      *
-     * @param array $data
-     * @param mixed $request
-     * @static
+	 * @static
      * @access protected
-     * @return void
+	 *
+     * @param array $data dereferenced Array
+     * @param mixed $request
+	 * @param array $roleOptions dereferenced Array
+     * @return boolean
      */
-    protected static function _parseClosures(array &$data = array(), $request = null, array &$roleOptions = array()) {
+    protected static function _parseClosures(
+		array &$data = array(), $request = null, array &$roleOptions = array()
+	) {
         $return = true;
         foreach ($data as $key => $item) {
             if (is_callable($item)) {
@@ -154,6 +183,7 @@ class AuthRbac extends \lithium\core\Object {
 	 * @todo reduce Model Overhead (will duplicated in each model)
 	 *
 	 * @param Request $request Object
+	 * @param array $options
 	 * @return array|mixed $roles Roles with attachted User Models
 	 */
 	protected static function _getRolesByAuth($request, array $options = array()){
@@ -190,7 +220,6 @@ class AuthRbac extends \lithium\core\Object {
         }
         return false;
     }
-
 }
 
 ?>
