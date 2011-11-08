@@ -208,7 +208,6 @@ class AuthRbac extends \lithium\core\Object {
 		}
 		return false;
 	}
-
 }
 
 ?>
