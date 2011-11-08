@@ -34,40 +34,40 @@ class AuthRbac extends \lithium\core\Object {
 	 *         an array with reasons for denial if denied.
 	 */
     public function check($requester, $request, array $options = array()) {
-        if (empty($this->_roles)) {
-            throw new ConfigException('No roles defined for adapter configuration.');
-        }
+		if (empty($this->_roles)) {
+			throw new ConfigException('No roles defined for adapter configuration.');
+		}
 
-        $roleDefaults = array(
-            'message' => '',
-            'redirect' => '',
-            'allow' => true,
-            'requesters' => '*',
-            'match' => '*::*'
-        );
+		$roleDefaults = array(
+			'message' => '',
+			'redirect' => '',
+			'allow' => true,
+			'requesters' => '*',
+			'match' => '*::*'
+		);
 
-        $message = $options['message'];
-        $redirect = $options['redirect'];
+		$message = $options['message'];
+		$redirect = $options['redirect'];
 
-        $accessible = false;
-        foreach ($this->_roles as $role) {
-            $role += $roleDefaults;
+		$accessible = false;
+		foreach ($this->_roles as $role) {
+			$role += $roleDefaults;
 
-            // Check to see if this role applies to this request
-            if (!static::parseMatch($role['match'], $request)) {
-                continue;
-            }
+			// Check to see if this role applies to this request
+			if (!static::parseMatch($role['match'], $request)) {
+				continue;
+			}
 
 			$accessible = static::_isAccessible($role, $request, $options);
 
 			if (!$accessible) {
-                $message = !empty($role['message']) ? $role['message'] : $message;
-                $redirect = !empty($role['redirect']) ? $role['redirect'] : $redirect;
-            }
-        }
+				$message = !empty($role['message']) ? $role['message'] : $message;
+				$redirect = !empty($role['redirect']) ? $role['redirect'] : $redirect;
+			}
+		}
 
-        return !$accessible ? compact('message', 'redirect') : array();
-    }
+		return!$accessible ? compact('message', 'redirect') : array();
+	}
 
 	/**
 	 * Checks if the Role grants access
