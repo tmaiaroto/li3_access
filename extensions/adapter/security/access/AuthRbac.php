@@ -71,6 +71,10 @@ class AuthRbac extends \lithium\core\Object {
 
 	/**
 	 * Checks if the Role grants access
+	 * If allow === false => no access
+	 * If requesters has no role => no access
+	 * If allows contains closures => return closures return
+	 * Otherwise => grants access
 	 *
 	 * @param array $role Array Set of Roles (dereferenced)
 	 * @param mixed $request A lithium Request object.
@@ -78,13 +82,16 @@ class AuthRbac extends \lithium\core\Object {
 	 * @return boolean $accessable
 	 */
 	protected static function _isAccessible(&$role, $request, $options) {
-		if (is_array($role['allow'])) {
-			return static::_parseClosures($role['allow'], $request, $role);
-		}
 		if ($role['allow'] === false) {
 			return false;
 		}
-		return static::_hasRole($role['requesters'], $request, $options);
+		if (!static::_hasRole($role['requesters'], $request, $options)) {
+			return false;
+		}
+		if (is_array($role['allow'])) {
+			return static::_parseClosures($role['allow'], $request, $role);
+		}
+		return true;
 	}
 
 	/**
@@ -153,7 +160,7 @@ class AuthRbac extends \lithium\core\Object {
 	 * @param array $roleOptions dereferenced Array
 	 * @return boolean
 	 */
-	protected static function _parseClosures(array &$data = array(), $request = null, array &$roleOptions = array()) {
+	protected static function _parseClosures(array &$data, $request, array &$roleOptions = array()){
 		$return = true;
 		foreach ($data as $key => $item) {
 			if (is_callable($item)) {
