@@ -58,23 +58,9 @@ class AuthRbac extends \lithium\core\Object {
                 continue;
             }
 
-			$accessable = static::_is_accessable($role, $request, $options);
+			$accessable = static::_isAccessible($role, $request, $options);
 
-			/* old Code:
-            $accessable = true;
-
-            if (($role['allow'] === false) ||
-                (!static::_hasRole($role['requesters'], $request, $options)) ||
-                (
-			 		is_array($role['allow']) &&
-					!static::_parseClosures($role['allow'], $request, $role)
-				)
-            ){
-                $accessable = false;
-            }
-			*/
-
-            if (!$accessable) {
+			if (!$accessable) {
                 $message = !empty($role['message']) ? $role['message'] : $message;
                 $redirect = !empty($role['redirect']) ? $role['redirect'] : $redirect;
             }
@@ -91,7 +77,7 @@ class AuthRbac extends \lithium\core\Object {
 	 * @param array $options An array of additional options for the _getRolesByAuth method.
 	 * @return boolean $accessable
 	 */
-	protected static function _is_accessable($role, $request, $options){
+	protected static function _isAccessible($role, $request, $options){
 		if (is_array($role['allow'])) {
 			return static::_parseClosures($role['allow'], $request, $role);
 		} else if ($role['allow'] === false) {
