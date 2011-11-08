@@ -5,7 +5,11 @@ namespace li3_access\tests\mocks\extensions\adapter\auth;
 class MockAuthAdapter extends \lithium\core\Object {
 
 	public function check($credentials, array $options = array()) {
-        return isset($options['success']) && !empty($credentials->data) ? $credentials->data : false;
+		$granted = false;
+		if (isset($options['success']) && !empty($credentials->data)) {
+			$granted = $credentials->data;
+		}
+        return  $granted;
 	}
 
 	public function set($data, array $options = array()) {
@@ -16,8 +20,8 @@ class MockAuthAdapter extends \lithium\core\Object {
 	}
 
 	public function clear(array $options = array()) {
-	}
 
+	}
 }
 
 ?>
