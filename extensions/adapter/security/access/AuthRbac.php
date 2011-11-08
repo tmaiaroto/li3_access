@@ -193,7 +193,7 @@ class AuthRbac extends \lithium\core\Object {
 	 * @access protected
 	 * @return void
 	 */
-	protected function _hasRole($requesters, $request, array $options = array()) {
+	protected static function _hasRole($requesters, $request, array $options = array()) {
 		$authed = array_keys(static::_getRolesByAuth($request, $options));
 
 		$requesters = (array) $requesters;
