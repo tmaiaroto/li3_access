@@ -49,7 +49,7 @@ class AuthRbac extends \lithium\core\Object {
         $message = $options['message'];
         $redirect = $options['redirect'];
 
-        $accessable = false;
+        $accessible = false;
         foreach ($this->_roles as $role) {
             $role += $roleDefaults;
 
@@ -58,15 +58,15 @@ class AuthRbac extends \lithium\core\Object {
                 continue;
             }
 
-			$accessable = static::_isAccessible($role, $request, $options);
+			$accessible = static::_isAccessible($role, $request, $options);
 
-			if (!$accessable) {
+			if (!$accessible) {
                 $message = !empty($role['message']) ? $role['message'] : $message;
                 $redirect = !empty($role['redirect']) ? $role['redirect'] : $redirect;
             }
         }
 
-        return !$accessable ? compact('message', 'redirect') : array();
+        return !$accessible ? compact('message', 'redirect') : array();
     }
 
 	/**
