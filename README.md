@@ -20,7 +20,7 @@ You must configure the adapter you wish to use first, but once you have it confi
         $this->redirect($access['redirect']);
     }
 
-If the request validates correctly based on your configuration then `Access::check()` will return an empty `array()` otherwise it will return and array with two keys; `message` and `redirect`. These values are built into the Access class but you can override them but passing them as `$options` to all three of the adapters in this repository.
+If the request validates correctly based on your configuration then `Access::check()` will return an empty `array()` otherwise it will return an array with two keys; `message` and `redirect`. These values are built into the Access class but you can override them by passing them as `$options` to all three of the adapters in this repository.
 
 ## Configuration
 
@@ -51,7 +51,7 @@ Then to deny all requests from the authenticated user.
         $this->redirect($access['redirect']);
     }
 
-There are four built in rules; allowAll, denyAll, allowAnyUser and allowIp, for more information see the adapter itself. However, this adapter is at it's most useful when you add your own rules.
+There are four built in rules; allowAll, denyAll, allowAnyUser and allowIp, for more information see the adapter itself. However, this adapter is at its most useful when you add your own rules.
 
     Access::adapter('custom_rule')->add(function($user, $request, $options) {
         // Your logic here. Just make sure it returns an array.
@@ -67,7 +67,7 @@ One more to go!
 
 This is the most complex adapter in this repository at this time. It's used for Role Based Access Control. You define a set of roles (or conditions) to match the request against, if the request matches your conditions the adapter then checks to see if the user is authenticated with the appropriate `\lithium\security\Auth` configurations to be granted access.
 
-It's difficult to explain (I hope that's clear enough) so lets look at an example configuration to try and achive some clarity:
+It's difficult to explain (I hope that's clear enough) so lets look at an example configuration to try and achieve some clarity:
 
     Access::config(
         'auth_rbac' => array(
