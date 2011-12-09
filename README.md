@@ -26,7 +26,7 @@ If the request validates correctly based on your configuration then `Access::che
 
 In this repository there are three adapters. All three work in a slightly different way.
 
-### sSimple Adapter
+### Simple Adapter
 
 The simple adapter is exactly what it says it is. The check method only checks that the data passed to is not empty and as a result the configuration is trivial.
 
