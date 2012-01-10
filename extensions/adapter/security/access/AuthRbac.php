@@ -119,9 +119,11 @@ class AuthRbac extends \lithium\core\Object {
 		$params = array();
 		foreach ((array) $match as $key => $param) {
 			if (is_string($param)) {
-				if (preg_match('/^[A-Za-z0-9_\*]+::[A-Za-z0-9_\*]+$/', $param, $regexMatches)) {
-					list($controller, $action) = explode('::', reset($regexMatches));
-					$params += compact('controller', 'action');
+				if (preg_match('/^([A-Za-z0-9_\*\\\]+)::([A-Za-z0-9_\*]+)$/', $param, $regexMatches)) {
+					$params += array(
+						'controller' => $regexMatches[1],
+						'action' => $regexMatches[2]
+					);
 					continue;
 				}
 			}

@@ -226,6 +226,15 @@ class AuthRbacTest extends \lithium\test\Unit {
 		$test = function() { return false; };
 		$this->assertFalse(Access::adapter('test_closures')->parseMatch(array($test), $request));
 		$this->assertFalse(Access::adapter('test_closures')->parseMatch(array(), $request));
+
+		$request = new Request(array('params' => array(
+			'controller' => 'lithium\test\Controller',
+			'action' => 'index'
+		)));
+		$match = 'Controller::*';
+		$this->assertFalse(Access::adapter('test_check')->parseMatch($match, $request));
+		$match = 'lithium\test\Controller::*';
+		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
 	}
 
 	public function testClosures() {
