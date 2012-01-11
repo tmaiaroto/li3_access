@@ -53,6 +53,19 @@ class AuthRbacTest extends \lithium\test\Unit {
 					)
 				)
 			),
+			'test_allow_closure' => array(
+				'adapter' => 'AuthRbac',
+				'roles' => array(
+					array(
+						'requesters' => '*',
+						'match' => '*::*',
+						'allow' => function($request, &$roleOptions) {
+							$roleOptions['message'] = 'Test allow options set.';
+							return $request->params['allow'] ? true : false;
+						}
+					)
+				)
+			),
 			'test_message_override' => array(
 				'adapter' => 'AuthRbac',
 				'roles' => array(
@@ -265,6 +278,16 @@ class AuthRbacTest extends \lithium\test\Unit {
 			'message' => 'You are not permitted to access this area.',
 			'redirect' => '/'
 		);
+		$this->assertIdentical($expected, $result);
+
+		$request->params['allow'] = true;
+		$result = Access::check('test_allow_closure', $user, $request, $authSuccess);
+		$expected = array();
+		$this->assertIdentical($expected, $result);
+
+		$request->params['allow'] = false;
+		$result = Access::check('test_allow_closure', $user, $request, $authSuccess);
+		$expected = array('message' => 'Test allow options set.', 'redirect' => '/');
 		$this->assertIdentical($expected, $result);
 	}
 

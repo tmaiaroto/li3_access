@@ -52,6 +52,9 @@ class AuthRbac extends \lithium\core\Object {
 		$accessible = false;
 		foreach ($this->_roles as $role) {
 			$role += $roleDefaults;
+			if (is_callable($role['allow'])) {
+				$role['allow'] = (array) $role['allow'];
+			}
 
 			// Check to see if this role applies to this request
 			if (!static::parseMatch($role['match'], $request)) {
