@@ -23,19 +23,19 @@ class Acl extends \lithium\core\Object {
 
 	/**
 	 * Holds all permission of $requester
-	 * @var array 
+	 * @var array
 	 */
 	protected $_permissions = array();
 
 	/**
 	 * Holds all permission of $requester
-	 * @var array 
+	 * @var array
 	 */
 	protected static $_aroPath = false;
 
 	/**
 	 * Holds all permission of $requester
-	 * @var array 
+	 * @var array
 	 */
 	protected static $_acoPath = false;
 
@@ -68,7 +68,7 @@ class Acl extends \lithium\core\Object {
 // 			}
 // 		);
 // 	}
-	
+
 	/**
 	 * Checks if the given `$requester` has access to action `$request`
 	 *
@@ -83,22 +83,14 @@ class Acl extends \lithium\core\Object {
 	public function check($requester, $request, array $options = array()) {
 		$defaults = array();
 		$options += $defaults;
-
-		if (!empty($requester)){
-			$model = isset($this->_config['credentials']['model']) ? $this->_config['credentials']['model'] : null;
-			if (!empty($model)){
-				$requester = array($model => $requester);
-			}
-		}
-
 		return self::_check($requester, $request, $options);
 	}
 
 	/**
 	 * Get perms
 	 *
-	 * @param string $aro 
-	 * @param string $aco 
+	 * @param string $aro
+	 * @param string $aco
 	 * @return void
 	 * @author Andrzej Grzegorz Borkowski
 	 */
@@ -106,7 +98,7 @@ class Acl extends \lithium\core\Object {
 		$resources = array();
 
 		$check = self::_check($aro, $aco);
- 
+
 		$aroPath = self::$_aroPath;
 		$acoPath = self::$_acoPath;
 
@@ -143,6 +135,7 @@ class Acl extends \lithium\core\Object {
 				'conditions' => array(
 					"{$permAlias}.aro_id" => $aroPath[$i]['id'],
 					"{$permAlias}.aco_id" => $acosIDs
+					//,"{$permAlias}._allow" => 1
 				),
 				'order' => "{$acoAlias}.lft DESC",
 				'with' => array('Acos'),
@@ -181,7 +174,7 @@ class Acl extends \lithium\core\Object {
 	 * @return void
 	 */
 	public function clear(array $options = array()) {
-		
+
 	}
 
 	/**

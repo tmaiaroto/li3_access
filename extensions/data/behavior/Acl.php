@@ -67,13 +67,12 @@ class Acl extends \lithium\core\StaticObject {
 		}
 		$data = array(
 			'parent_id' => isset($parent[0]['id']) ? $parent[0]['id'] : null,
-			//'model' => $model->alias,
 			'model' => $self::meta('name'),
-			//'foreign_key' => $model->id
 			'foreign_key' => $entity->data('id')
 		);
 
 		if ($exist) {
+			return true;
 			$node = self::node($self, array('model' => $self::meta('name'), 'foreign_key' => $entity->data('id')));
 			$data['id'] = isset($node[0]['id']) ? $node[0]['id'] : null;
 		}
@@ -83,7 +82,8 @@ class Acl extends \lithium\core\StaticObject {
 		 */
 		$model = Libraries::locate('models', $type, array('libraries' => 'li3_access'));
 		if (empty($model)) {
-			throw new ClassNotFoundException(sprintf("Model class '%s' not found in access\acl\Acl::node() when trying to bind %s object", $model, $type));
+			throw new ClassNotFoundException(
+				sprintf("Model class '%s' not found in access\acl\Acl::node() when trying to bind %s object", $model, $type));
 			return null;
 		}
 		$model = $model::create();
@@ -129,7 +129,7 @@ class Acl extends \lithium\core\StaticObject {
 		if (empty($model)) {
 			throw new ClassNotFoundException(sprintf("Model class '%s' not found in access\acl\Acl::node() when trying to bind %s object", $model, $type));
 			return null;
-		}	
+		}
 		return $model::node($ref);
 		//i haved defined `use` statment at head
 		//Fatal error: Class 'Aros' not found in /Users/nim/Sites/holicon/pwi2/libraries/li3_access/extensions/models/behaviors/Acl.php on line 124

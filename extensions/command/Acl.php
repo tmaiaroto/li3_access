@@ -21,7 +21,7 @@ use lithium\core\ClassNotFoundException;
 use li3_access\models\Acos;
 use li3_access\models\Aros;
 use app\models\Users;
-use app\models\Queue;
+use app\models\Queues;
 
 /**
  * The `acl` command allows you to rapidly develop your permission in Aros Acos trees.
@@ -162,21 +162,22 @@ class Acl extends \lithium\console\Command {
 	 */
 	protected function syncQueue() {
 		$this->header('Sunchronize ACO Queues tree');
-		$root = Acos::node('models/Queue');
+		$root = Acos::node('models/Queues');
+		if(!$root){
+			exit('root not found');
+		}
 		$defaultsSettings = array(
-			'parent_id' => $root[0]['id'], //1. Role.7 => users @todo its hardcode role id
-			'model' => Queue::meta('name')
+			'parent_id' => $root[0]['id'], // 244
+			'model' => Queues::meta('name') // Queues
 		);
-		$data = Queue::find('all');
+		$data = Queues::find('all', array('li3_access' => false));
 		foreach ($data as $queue){
-			$data = Acos::first(array(
-				'conditions' => array(
-					'model' => 'Queues',
-					'foreign_key' => $queue->data('id')
-				)
+			$aco = Acos::node(array(
+				'model' => $defaultsSettings['model'],
+				'foreign_key' => $queue->data('id')
 			));
-			if(!$data || !$data->exists()){
-				$this->out("[queue] {$queue->data('name')} not found, creating ARO");
+			if(!$aco){
+				$this->out("[aco] [notfound] {$defaultsSettings['model']} > {$queue->data('name')}");
 				$node = Acos::create();
 				if($node->save(array(
 					'parent_id' => $defaultsSettings['parent_id'],
@@ -184,13 +185,13 @@ class Acl extends \lithium\console\Command {
 					'foreign_key' => $queue->data('id'),
 					'alias' => $queue->data('name')
 				))){
-					$this->out("[node] {$node->data('alias')} add to ARO (fk:{$node->data('foreign_key')}, p:{$node->data('parent_id')}) success");
+					$this->out("[create node] {$node->data('alias')} add to ARO (fk:{$node->data('foreign_key')}, p:{$node->data('parent_id')}) success");
 				}else{
-					$this->out("[controller] {$alias} add to ACO fail");
+					$this->out("[error] {$alias} add to ACO fail");
 					return false;
 				}
 			}else{
-				$this->out("[user] {$queue->data('name')} found in ARO (id:{$queue->data('id')}), skipping");
+				$this->out("[aco] [exist] {$defaultsSettings['model']} > {$queue->data('name')} found in ARO (id:{$queue->data('id')}), skipping");
 			}
 		}
 		//root
