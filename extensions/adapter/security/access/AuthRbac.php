@@ -28,12 +28,13 @@ class AuthRbac extends \lithium\core\Object {
 	 *        the user requesting access. Or false (because Auth::check() can return false).
 	 *        This is an optional parameter, bercause we will fetch the users data trough Auth
 	 *        seperately.
-	 * @param object $request The Lithium Request object.
+	 * @param mixed $params The Lithium `Request` object, or an array with at least
+	 *        'request', and 'params'
 	 * @param array $options An array of additional options for the _getRolesByAuth method.
 	 * @return Array An empty array if access is allowed or
 	 *         an array with reasons for denial if denied.
 	 */
-	public function check($requester, $request, array $options = array()) {
+	public function check($requester, $params, array $options = array()) {
 		if (empty($this->_roles)) {
 			throw new ConfigException('No roles defined for adapter configuration.');
 		}
@@ -57,11 +58,11 @@ class AuthRbac extends \lithium\core\Object {
 			}
 
 			// Check to see if this role applies to this request
-			if (!static::parseMatch($role['match'], $request)) {
+			if (!static::parseMatch($role['match'], $params)) {
 				continue;
 			}
 
-			$accessible = static::_isAccessible($role, $request, $options);
+			$accessible = static::_isAccessible($role, $params, $options);
 
 			if (!$accessible) {
 				$message = !empty($role['message']) ? $role['message'] : $message;
@@ -80,19 +81,19 @@ class AuthRbac extends \lithium\core\Object {
 	 * Otherwise => grants access
 	 *
 	 * @param array $role Array Set of Roles (dereferenced)
-	 * @param mixed $request A lithium Request object.
+	 * @param mixed $quest A lithium Request object.
 	 * @param array $options An array of additional options for the _getRolesByAuth method.
 	 * @return boolean $accessable
 	 */
-	protected static function _isAccessible(&$role, $request, $options) {
+	protected static function _isAccessible(&$role, $params, $options) {
 		if ($role['allow'] === false) {
 			return false;
 		}
-		if (!static::_hasRole($role['requesters'], $request, $options)) {
+		if (!static::_hasRole($role['requesters'], $params, $options)) {
 			return false;
 		}
 		if (is_array($role['allow'])) {
-			return static::_parseClosures($role['allow'], $request, $role);
+			return static::_parseClosures($role['allow'], $params['request'], $role);
 		}
 		return true;
 	}
@@ -104,26 +105,30 @@ class AuthRbac extends \lithium\core\Object {
 	 * to validate. * Is also acceptable to match a parameter without a specific value.
 	 *
 	 * @param mixed $match A set of parameters to validate the request against.
-	 * @param mixed $request A lithium Request object.
+	 * @param mixed $params The Lithium `Request` object, or an array with at least
+	 *        'request', and 'params'
 	 * @access public
 	 * @return boolean True if a match is found.
 	 */
-	public static function parseMatch($match, $request) {
+	public static function parseMatch($match, $params) {
 		if (empty($match)) {
 			return false;
 		}
 
 		if (is_array($match)) {
-			if (!static::_parseClosures($match, $request)) {
+			$_params = $params;
+			if (!static::_parseClosures($match, $params['request'], $_params)) {
 				return false;
 			}
+		} elseif (is_callable($match)) {
+			return (boolean) $match($params['request'], $params);
 		}
 
-		$params = array();
+		$matchParams = array();
 		foreach ((array) $match as $key => $param) {
 			if (is_string($param)) {
 				if (preg_match('/^([A-Za-z0-9_\*\\\]+)::([A-Za-z0-9_\*]+)$/', $param, $regexMatches)) {
-					$params += array(
+					$matchParams += array(
 						'controller' => $regexMatches[1],
 						'action' => $regexMatches[2]
 					);
@@ -131,10 +136,10 @@ class AuthRbac extends \lithium\core\Object {
 				}
 			}
 
-			$params[$key] = $param;
+			$matchParams[$key] = $param;
 		}
 
-		foreach ($params as $type => $value) {
+		foreach ($matchParams as $type => $value) {
 			if ($value === '*') {
 				continue;
 			}
@@ -143,8 +148,8 @@ class AuthRbac extends \lithium\core\Object {
 				$value = Inflector::underscore($value);
 			}
 
-			$exists_in_request = array_key_exists($type, $request->params);
-			if (!$exists_in_request || $value !== Inflector::underscore($request->params[$type])) {
+			$exists_in_request = array_key_exists($type, $params['params']);
+			if (!$exists_in_request || $value !== Inflector::underscore($params['params'][$type])) {
 				return false;
 			}
 		}
@@ -161,11 +166,11 @@ class AuthRbac extends \lithium\core\Object {
 	 * @access protected
 	 *
 	 * @param array $data dereferenced Array
-	 * @param mixed $request
+	 * @param object $request The Lithium `Request` object
 	 * @param array $roleOptions dereferenced Array
 	 * @return boolean
 	 */
-	protected static function _parseClosures(array &$data, $request, array &$roleOptions = array()){
+	protected static function _parseClosures(array &$data, $request, array &$roleOptions = array()) {
 		$return = true;
 		foreach ($data as $key => $item) {
 			if (is_callable($item)) {
@@ -181,14 +186,15 @@ class AuthRbac extends \lithium\core\Object {
 	/**
 	 * @todo reduce Model Overhead (will duplicated in each model)
 	 *
-	 * @param Request $request Object
+	 * @param mixed $params The Lithium `Request` object, or an array with at least
+	 *        'request', and 'params'
 	 * @param array $options
 	 * @return array|mixed $roles Roles with attachted User Models
 	 */
-	protected static function _getRolesByAuth($request, array $options = array()) {
+	protected static function _getRolesByAuth($params, array $options = array()) {
 		$roles = array('*' => '*');
 		foreach (array_keys(Auth::config()) as $key) {
-			if ($check = Auth::check($key, $request, $options)) {
+			if ($check = Auth::check($key, $params['request'], $options)) {
 				$roles[$key] = $check;
 			}
 		}
@@ -199,13 +205,13 @@ class AuthRbac extends \lithium\core\Object {
 	 * _hasRole Compares the results from _getRolesByAuth with the array passed to it.
 	 *
 	 * @param mixed $requesters
-	 * @param mixed $request
+	 * @param mixed $params
 	 * @param array $options
 	 * @access protected
 	 * @return void
 	 */
-	protected static function _hasRole($requesters, $request, array $options = array()) {
-		$authed = array_keys(static::_getRolesByAuth($request, $options));
+	protected static function _hasRole($requesters, $params, array $options = array()) {
+		$authed = array_keys(static::_getRolesByAuth($params, $options));
 
 		$requesters = (array) $requesters;
 		if (in_array('*', $requesters)) {
