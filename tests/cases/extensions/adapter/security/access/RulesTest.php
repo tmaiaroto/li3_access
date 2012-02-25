@@ -23,15 +23,15 @@ class RulesTest extends \lithium\test\Unit {
 			'message' => 'You can not access this from your location.',
 			'ip' => '/10\.0\.1\.\d+/'
 		));
-		$result = $adapter->check(array(), $request, compact('rules'));
+		$result = $adapter->check(array(), compact('request'), compact('rules'));
 		$this->assertEqual(array(), $result);
 
 		$request = new Request(array('env' => array('REMOTE_ADDR' => '10.0.1.255')));
-		$result = $adapter->check(array(), $request, compact('rules'));
+		$result = $adapter->check(array(), compact('request'), compact('rules'));
 		$this->assertEqual(array(), $result);
 
 		$request = new Request(array('env' => array('REMOTE_ADDR' => '10.0.2.1')));
-		$result = $adapter->check(array(), $request, compact('rules'));
+		$result = $adapter->check(array(), compact('request'), compact('rules'));
 		$this->assertEqual('You can not access this from your location.', $result['message']);
 	}
 
@@ -45,13 +45,13 @@ class RulesTest extends \lithium\test\Unit {
 
 		foreach (array(2, 3, 4) as $i) {
 			$request = new Request(array('env' => array('REMOTE_ADDR' => "10.0.1.{$i}")));
-			$result = $adapter->check(array(), $request, compact('rules'));
+			$result = $adapter->check(array(), compact('request'), compact('rules'));
 			$this->assertEqual(array(), $result);
 		}
 
 		foreach (array(1, 5, 255) as $i) {
 			$request = new Request(array('env' => array('REMOTE_ADDR' => "10.0.1.{$i}")));
-			$result = $adapter->check(array(), $request, compact('rules'));
+			$result = $adapter->check(array(), compact('request'), compact('rules'));
 			$this->assertEqual('You can not access this from your location.', $result['message']);
 		}
 	}
@@ -70,20 +70,20 @@ class RulesTest extends \lithium\test\Unit {
 				'ip' => '10.0.1.1'
 			)
 		);
-		$result = $adapter->check($user, $request, compact('rules'));
+		$result = $adapter->check($user, compact('request'), compact('rules'));
 		$this->assertEqual(array(), $result);
 
 		$rules = array(array('rule' => 'denyAll', 'message' => 'You must be logged in.'));
 		$expected = array('rule' => 'denyAll', 'message' => 'You must be logged in.');
-		$result = $adapter->check($user, $request, compact('rules'));
+		$result = $adapter->check($user, compact('request'), compact('rules'));
 		$this->assertEqual($expected, $result);
 
 		$rules = array('rule' => 'allowAnyUser', 'message' => 'You must be logged in.');
 		$expected = array('rule' => 'allowAnyUser', 'message' => 'You must be logged in.');
-		$result = $adapter->check(array(), $request, compact('rules'));
+		$result = $adapter->check(array(), compact('request'), compact('rules'));
 		$this->assertEqual($expected, $result);
 
-		$result = $adapter->check(false, $request, compact('rules'));
+		$result = $adapter->check(false, compact('request'), compact('rules'));
 		$this->assertEqual($expected, $result);
 	}
 
@@ -96,7 +96,7 @@ class RulesTest extends \lithium\test\Unit {
 		$adapter = new Rules();
 
 		$expected = array('rule' => false, 'message' => null, 'redirect' => null);
-		$result = $adapter->check($user, $request);
+		$result = $adapter->check($user, compact('request'));
 		$this->assertEqual($expected, $result);
 	}
 
@@ -114,7 +114,7 @@ class RulesTest extends \lithium\test\Unit {
 			})
 		);
 		$expected = array();
-		$result = $adapter->check($user, $request, compact('rules'));
+		$result = $adapter->check($user, compact('request'), compact('rules'));
 		$this->assertEqual($expected, $result);
 	}
 
@@ -129,7 +129,7 @@ class RulesTest extends \lithium\test\Unit {
 
 		$rules = array(array('rule' => 'testDeny', 'message' => 'Access denied.'));
 		$expected = array('rule' => 'testDeny', 'message' => 'Access denied.');
-		$result = $adapter->check($user, $request, compact('rules'));
+		$result = $adapter->check($user, compact('request'), compact('rules'));
 		$this->assertEqual($expected, $result);
 
 		$this->assertTrue(is_callable($adapter->get('testDeny')));
@@ -152,14 +152,14 @@ class RulesTest extends \lithium\test\Unit {
 			array('rule' => 'allowAll', 'message' => 'Access denied.'),
 			array('rule' => 'denyAll', 'message' => 'Access denied.')
 		);
-		$result = $adapter->check($user, $request, compact('rules'));
+		$result = $adapter->check($user, compact('request'), compact('rules'));
 		$this->assertEqual(array('rule' => 'denyAll', 'message' => 'Access denied.'), $result);
 
 		$adapter = new Rules(array('allowAny' => true));
-		$result = $adapter->check($user, $request, compact('rules'));
+		$result = $adapter->check($user, compact('request'), compact('rules'));
 		$this->assertEqual(array(), $result);
 
-		$result = $adapter->check($user, $request, array('rules' => array('denyAll', 'allowAll')));
+		$result = $adapter->check($user, compact('request'), array('rules' => array('denyAll', 'allowAll')));
 		$this->assertEqual(array(), $result);
 	}
 
@@ -171,7 +171,7 @@ class RulesTest extends \lithium\test\Unit {
 		$adapter = new Rules();
 		$user = array('username' => 'Tom');
 
-		$result = $adapter->check($user, $request, array('rules' => array('badness')));
+		$result = $adapter->check($user, compact('request'), array('rules' => array('badness')));
 		$this->assertEqual(array('rule' => 'badness'), $result);
 	}
 
@@ -190,9 +190,9 @@ class RulesTest extends \lithium\test\Unit {
 			'default' => array('foobar')
 		));
 
-		$result = $adapter->check($user, $request, array('foo' => 'baz'));
+		$result = $adapter->check($user, compact('request'), array('foo' => 'baz'));
 		$this->assertEqual(array('rule' => 'foobar', 'foo' => 'baz'), $result);
-		$result = $adapter->check($user, $request, array('foo' => 'bar'));
+		$result = $adapter->check($user, compact('request'), array('foo' => 'bar'));
 		$this->assertEqual(array(), $result);
 	}
 
@@ -213,13 +213,13 @@ class RulesTest extends \lithium\test\Unit {
 			'user' => function() use ($user) { return $user; }
 		));
 
-		$result = $adapter->check($user, $request);
+		$result = $adapter->check($user, compact('request'));
 		$this->assertEqual(array(), $result);
 
-		$result = $adapter->check(null, $request);
+		$result = $adapter->check(null, compact('request'));
 		$this->assertEqual(array(), $result);
 
-		$result = $adapter->check(array('username' => 'Bob'), $request);
+		$result = $adapter->check(array('username' => 'Bob'), compact('request'));
 		$this->assertEqual(array('rule' => 'user'), $result);
 	}
 }

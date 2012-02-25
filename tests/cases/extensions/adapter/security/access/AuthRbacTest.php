@@ -66,6 +66,21 @@ class AuthRbacTest extends \lithium\test\Unit {
 					)
 				)
 			),
+			'test_allow_closure_match' => array(
+				'adapter' => 'AuthRbac',
+				'roles' => array(
+					array(
+						'requesters' => '*',
+						'match' => function($request) {
+							return !empty($request->params['allow_match']);
+						},
+						'allow' => function($request, &$roleOptions) {
+							$roleOptions['message'] = 'Test allow options set 2.';
+							return $request->params['allow'] ? true : false;
+						}
+					)
+				)
+			),
 			'test_message_override' => array(
 				'adapter' => 'AuthRbac',
 				'roles' => array(
@@ -183,71 +198,73 @@ class AuthRbacTest extends \lithium\test\Unit {
 	}
 
 	public function testParseMatch() {
-		$request = new Request(array('params' => array(
+		$params = array(
 			'library' => 'test_library',
 			'controller' => 'test_controllers',
 			'action' => 'test_action'
-		)));
+		);
+		$request = new Request(array('params' => $params));
 
 		$match = array(
 			'library' => 'test_library',
 			'controller' => 'TestControllers',
 			'action' => 'test_action'
 		);
-		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
+		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
 		$match = array('controller' => 'TestControllers', 'action' => 'test_action');
-		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
+		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
 		$match = array('library' => 'test_library', 'action' => 'test_action');
-		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
+		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
 		$match = array('library' => 'test_library', 'controller' => 'TestControllers');
-		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
+		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
 		$match = array(
 			'library' => 'test_no_match',
 			'controller' => 'TestControllers',
 			'action' => 'test_action'
 		);
-		$this->assertFalse(Access::adapter('test_check')->parseMatch($match, $request));
+		$this->assertFalse(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
 		$match = 'TestControllers::test_action';
-		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
+		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
 		$match = 'TestControllers::*';
-		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
+		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
 		$match = '*::test_action';
-		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
+		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
 		$match = '*::*';
-		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
+		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
 		$match = array('library' => 'test_library', '*::*');
-		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
+		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
 		$match = array('library' => 'test_no_match', '*::*');
-		$this->assertFalse(Access::adapter('test_check')->parseMatch($match, $request));
+		$this->assertFalse(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
 		$match = null;
-		$this->assertFalse(Access::adapter('test_check')->parseMatch($match, $request));
+		$this->assertFalse(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 
 		$test = function() { return true; };
-		$this->assertTrue(Access::adapter('test_closures')->parseMatch(array($test), $request));
+		$this->assertTrue(Access::adapter('test_closures')->parseMatch(array($test), compact('request', 'params')));
 
 		$test = function() { return false; };
-		$this->assertFalse(Access::adapter('test_closures')->parseMatch(array($test), $request));
-		$this->assertFalse(Access::adapter('test_closures')->parseMatch(array(), $request));
+		$this->assertFalse(Access::adapter('test_closures')->parseMatch(array($test), compact('request', 'params')));
+		$this->assertFalse(Access::adapter('test_closures')->parseMatch(array(), compact('request', 'params')));
 
-		$request = new Request(array('params' => array(
+		$params = array(
 			'controller' => 'lithium\test\Controller',
 			'action' => 'index'
-		)));
+		);
+		$request = new Request(array('params' => $params));
 		$match = 'Controller::*';
-		$this->assertFalse(Access::adapter('test_check')->parseMatch($match, $request));
+		$this->assertFalse(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 		$match = 'lithium\test\Controller::*';
-		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, $request));
+		$this->assertTrue(Access::adapter('test_check')->parseMatch($match, compact('request', 'params')));
 	}
 
 	public function testClosures() {
@@ -288,6 +305,24 @@ class AuthRbacTest extends \lithium\test\Unit {
 		$request->params['allow'] = false;
 		$result = Access::check('test_allow_closure', $user, $request, $authSuccess);
 		$expected = array('message' => 'Test allow options set.', 'redirect' => '/');
+		$this->assertIdentical($expected, $result);
+
+		$request->params['allow'] = true;
+		$request->params['allow_match'] = true;
+		$result = Access::check('test_allow_closure_match', $user, $request, $authSuccess);
+		$expected = array();
+		$this->assertIdentical($expected, $result);
+
+		$request->params['allow'] = false;
+		$request->params['allow_match'] = true;
+		$result = Access::check('test_allow_closure_match', $user, $request, $authSuccess);
+		$expected = array('message' => 'Test allow options set 2.', 'redirect' => '/');
+		$this->assertIdentical($expected, $result);
+
+		$request->params['allow'] = true;
+		$request->params['allow_match'] = false;
+		$result = Access::check('test_allow_closure_match', $user, $request, $authSuccess);
+		$expected = array('message' => 'You are not permitted to access this area.', 'redirect' => '/');
 		$this->assertIdentical($expected, $result);
 	}
 
