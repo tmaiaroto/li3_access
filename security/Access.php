@@ -75,12 +75,13 @@ class Access extends \lithium\core\Adaptable {
 	 * @param string $name The name of the `Access` configuration/adapter to check against.
 	 * @param mixed $user The user data that holds all necessary information about
 	 *        the user requesting access. Or `false` (because Auth::check() can return `false`).
-	 * @param object $request The Lithium Request object.
+	 * @param mixed $params The Lithium `Request` object, or an array with at least
+	 *        'request', and 'params'
 	 * @param array $options An array of additional options.
 	 * @return Array An empty array if access is allowed and an array with reasons for denial
 	 *         if denied.
 	 */
-	public static function check($name, $user, $request, array $options = array()) {
+	public static function check($name, $user, $params, array $options = array()) {
 		$defaults = array(
 			'message' => 'You are not permitted to access this area.',
 			'redirect' => '/'
@@ -90,13 +91,18 @@ class Access extends \lithium\core\Adaptable {
 		if (($config = static::_config($name)) === null) {
 			throw new ConfigException("Configuration `{$name}` has not been defined.");
 		}
+		if (!is_array($params)) {
+			$params = array(
+				'request' => $params,
+				'params' => isset($params->params) ? $params->params : array()
+			);
+		}
 		$filter = function($self, $params) use ($name) {
-			$user = $params['user'];
-			$request = $params['request'];
-			$options = $params['options'];
-			return $self::adapter($name)->check($user, $request, $options);
+			return $self::adapter($name)->check(
+				$params['user'], $params['params'], $params['options']
+			);
 		};
-		$params = compact('user', 'request', 'options');
+		$params = compact('user', 'params', 'options');
 		return static::_filter(__FUNCTION__, $params, $filter, (array) $config['filters']);
 	}
 }

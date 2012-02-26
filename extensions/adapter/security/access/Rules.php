@@ -96,12 +96,13 @@ class Rules extends \lithium\core\Object {
 	 *
 	 * @param mixed $user The user data array that holds all necessary information about
 	 *        the user requesting access. Or false (because `Auth::check()` can return `false`).
-	 * @param object $request The Lithium `Request` object.
+	 * @param mixed $params The Lithium `Request` object, or an array with at least
+	 *        'request', and 'params'
 	 * @param array $options An array of additional options.
 	 * @return array An empty array if access is allowed and an array with reasons for denial
 	 *         if denied.
 	 */
-	public function check($user, $request, array $options = array()) {
+	public function check($user, $params, array $options = array()) {
 		$defaults = array(
 			'rules' => $this->_config['default'],
 			'allowAny' => $this->_config['allowAny']
@@ -121,7 +122,7 @@ class Rules extends \lithium\core\Object {
 			if (is_string($rule)) {
 				$rule = compact('rule');
 			}
-			$ruleResult = $this->_call($rule, $user, $request, $options);
+			$ruleResult = $this->_call($rule, $user, $params['request'], $options);
 
 			switch (true) {
 				case ($ruleResult === false && $options['allowAny']):
