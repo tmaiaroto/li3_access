@@ -278,7 +278,7 @@ class AuthRbacTest extends \lithium\test\Unit {
 		$request->params['match'] = true;
 		$request->params['allow'] = true;
 		$result = Access::check('test_closures', $user, $request, $authSuccess);
-        $this->assertIdentical(array(), $result);
+		$this->assertIdentical(array(), $result);
 
 		$request->params['match'] = true;
 		$request->params['allow'] = false;

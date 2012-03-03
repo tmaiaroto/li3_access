@@ -5,7 +5,7 @@
  * @author        Tom Maiaroto
  * @copyright     Copyright 2010, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
-*/
+ */
 
 namespace li3_access\security;
 
@@ -29,7 +29,6 @@ class Access extends \lithium\core\Adaptable {
 	 * @var object `Collection` of authentication configurations.
 	 */
 	protected static $_configurations = array();
-
 	/**
 	 * Libraries::locate() compatible path to adapters for this class.
 	 *
@@ -73,7 +72,8 @@ class Access extends \lithium\core\Adaptable {
 	 * perhaps, login.
 	 *
 	 * @param string $name The name of the `Access` configuration/adapter to check against.
-	 * @param mixed $user The user data that holds all necessary information about
+	 * @param object $request A Lithium Request object.
+	 * @param mixed $resource The user data that holds all necessary information about
 	 *        the user requesting access. Or `false` (because Auth::check() can return `false`).
 	 * @param mixed $params The Lithium `Request` object, or an array with at least
 	 *        'request', and 'params'
