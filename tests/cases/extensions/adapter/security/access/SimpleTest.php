@@ -5,7 +5,7 @@
  * @author        Tom Maiaroto
  * @copyright     Copyright 2010, Union of RAD (http://union-of-rad.org)
  * @license       http://opensource.org/licenses/bsd-license.php The BSD License
-*/
+ */
 
 namespace li3_access\tests\cases\extensions\adapter\security\access;
 

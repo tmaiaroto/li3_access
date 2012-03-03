@@ -9,13 +9,10 @@ class MockAuthAdapter extends \lithium\core\Object {
 		if (isset($options['success']) && !empty($credentials->data)) {
 			$granted = $credentials->data;
 		}
-        return  $granted;
+		return  $granted;
 	}
 
-	public function set($data, array $options = array()) {
-		if (isset($options['fail'])) {
-			return false;
-		}
+	public function set($data) {
 		return $data;
 	}
 

@@ -3,8 +3,8 @@
 namespace li3_access\extensions\adapter\security\access;
 
 use lithium\security\Auth;
-use lithium\core\ConfigException;
 use lithium\util\Inflector;
+use lithium\core\ConfigException;
 
 class AuthRbac extends \lithium\core\Object {
 
@@ -26,7 +26,7 @@ class AuthRbac extends \lithium\core\Object {
 	 *
 	 * @param mixed $requester The user data array that holds all necessary information about
 	 *        the user requesting access. Or false (because Auth::check() can return false).
-	 *        This is an optional parameter, bercause we will fetch the users data trough Auth
+	 *        This is an optional parameter, because we will fetch the users data through Auth
 	 *        seperately.
 	 * @param mixed $params The Lithium `Request` object, or an array with at least
 	 *        'request', and 'params'
@@ -210,6 +210,51 @@ class AuthRbac extends \lithium\core\Object {
 	 * @access protected
 	 * @return void
 	 */
+	protected function _accessable($resources, $roles, array $options = array()) {
+		$resources = (array) $resources;
+		if (in_array('*', $resources)) {
+			return true;
+		}
+
+		foreach ($resources as $resource) {
+			if (array_key_exists($resource, $roles)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Itterates over an array and runs any anonymous functions it finds. Returns
+	 * true if all of the closures it runs evaluate to true. $match is passed by
+	 * reference and any closures found are removed from it before the method is complete.
+	 *
+	 * @param array $data
+	 * @param mixed $request
+	 * @access protected
+	 * @return void
+	 */
+	protected function _run(&$data, $request = null, array &$options = array()) {
+		if (is_bool($data)) {
+			return $data;
+		}
+
+		if (!is_array($data)) {
+			return false;
+		}
+
+		$allow = true;
+		foreach ($data as $key => $item) {
+			if (is_callable($item)) {
+				if ($allow === true) {
+					$allow = (boolean) $item($request, $options);
+				}
+				unset($data[$key]);
+			}
+		}
+		return $allow;
+	}
+
 	protected static function _hasRole($requesters, $params, array $options = array()) {
 		$authed = array_keys(static::_getRolesByAuth($params, $options));
 
