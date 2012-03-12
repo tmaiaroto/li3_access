@@ -2,11 +2,6 @@
 
 namespace li3_access\extensions\adapter\security\access;
 
-/* uncomment it if needed
-use lithium\core\Libraries;
-use lithium\util\Set;
-*/
-
 class Simple extends \lithium\core\Object {
 
 	/**

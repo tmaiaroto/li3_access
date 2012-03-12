@@ -72,9 +72,8 @@ class Access extends \lithium\core\Adaptable {
 	 * perhaps, login.
 	 *
 	 * @param string $name The name of the `Access` configuration/adapter to check against.
-	 * @param object $request A Lithium Request object.
-	 * @param mixed $resource The user data that holds all necessary information about
-	 *        the user requesting access. Or `false` (because Auth::check() can return `false`).
+	 * @param mixed $user The user data array that holds all necessary information about
+	 *        the user requesting access. Or `false` (because `Auth::check()` can return `false`).
 	 * @param mixed $params The Lithium `Request` object, or an array with at least
 	 *        'request', and 'params'
 	 * @param array $options An array of additional options.
