@@ -20,7 +20,7 @@ class AuthRbac extends \lithium\core\Object {
 	protected $_roles = null;
 
 	/**
-	 * The `Rbac` adapter will iterate trough the rbac data Array.
+	 * The `Rbac` adapter will iterate through the rbac data Array.
 	 *
 	 * @todo: write better tests!
 	 *
@@ -189,7 +189,7 @@ class AuthRbac extends \lithium\core\Object {
 	 * @param mixed $params The Lithium `Request` object, or an array with at least
 	 *        'request', and 'params'
 	 * @param array $options
-	 * @return array|mixed $roles Roles with attachted User Models
+	 * @return array|mixed $roles Roles with attached User Models
 	 */
 	protected static function _getRolesByAuth($params, array $options = array()) {
 		$roles = array('*' => '*');
