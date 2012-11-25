@@ -15,7 +15,7 @@ Include the library in in your `/app/config/bootstrap/libraries.php`
 
 You must configure the adapter you wish to use first, but once you have it configured it's fairly simple to use.
 
-	$access = Access::check('access_config_name', $this->request, Auth::check('auth_config_name'));
+	$access = Access::check('access_config_name', Auth::check('auth_config_name'), $this->request);
 	if(!empty($access)) {
 		$this->redirect($access['redirect']);
 	}
@@ -76,7 +76,7 @@ It's difficult to explain (I hope that's clear enough) so lets look at an exampl
 			'adapter' => 'AuthRbac',
 			'roles' => array(
 				array(
-					'resources' => '*',
+					'requester' => '*',
 					'match' => '*::*'
 				),
 				array(
@@ -86,7 +86,7 @@ It's difficult to explain (I hope that's clear enough) so lets look at an exampl
 					'match' => array('library' => 'admin', '*::*')
 				),
 				array(
-					'resources' => '*',
+					'requester' => '*',
 					'match' => array(
 						'library' => 'admin', 'Users::login',
 						function($request, &$options) {
@@ -101,7 +101,7 @@ It's difficult to explain (I hope that's clear enough) so lets look at an exampl
 					}
 				),
 				array(
-					'resources' => '*',
+					'requester' => '*',
 					'match' => array('library' => 'admin', 'Users::logout')
 				)
 			)
