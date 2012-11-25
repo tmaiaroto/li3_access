@@ -76,17 +76,17 @@ It's difficult to explain (I hope that's clear enough) so lets look at an exampl
 			'adapter' => 'AuthRbac',
 			'roles' => array(
 				array(
-					'requester' => '*',
+					'requesters' => '*',
 					'match' => '*::*'
 				),
 				array(
 					'message' => 'No panel for you!',
 					'redirect' => array('library' => 'admin', 'Users::login'),
-					'requester' => 'admin',
+					'requesters' => 'admin',
 					'match' => array('library' => 'admin', '*::*')
 				),
 				array(
-					'requester' => '*',
+					'requesters' => '*',
 					'match' => array(
 						'library' => 'admin', 'Users::login',
 						function($request, &$options) {
@@ -101,7 +101,7 @@ It's difficult to explain (I hope that's clear enough) so lets look at an exampl
 					}
 				),
 				array(
-					'requester' => '*',
+					'requesters' => '*',
 					'match' => array('library' => 'admin', 'Users::logout')
 				)
 			)
@@ -139,7 +139,7 @@ In the closure example configuration:
 
 Not only must the library, controller and action match but the closure must return true. So this role will only apply to this request if all of the request params match and the request data is set.
 
-`'requester'`
+`'requesters'`
 
 A string or an array of auth configuration keys that this rule applies to. The string `*` denotes everyone, even those who are not authenticated. A string of `admin` will validate anyone who can be authenticated against the user defined `admin` Auth configuration. An array of configuration keys does the same but you can apply it to multiple Auth configurations in one go.
 
@@ -166,7 +166,7 @@ Assuming we have an Auth configuration like so:
     	)
     ));
 
-Setting `'requester' => array('user', 'customer')` would only apply the rule to anyone that could authenticate as a user or customer. Setting `'requester' => '*'` would mean that all of these auth configurations and people that are not authenticated would have this role applied to them.
+Setting `'requesters' => array('user', 'customer')` would only apply the rule to anyone that could authenticate as a user or customer. Setting `'requesters' => '*'` would mean that all of these auth configurations and people that are not authenticated would have this role applied to them.
 
 `'allow'`
 
