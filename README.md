@@ -15,7 +15,7 @@ Include the library in in your `/app/config/bootstrap/libraries.php`
 
 You must configure the adapter you wish to use first, but once you have it configured it's fairly simple to use.
 
-	$access = Access::check('access_config_name', $this->request, Auth::check('auth_config_name'));
+	$access = Access::check('access_config_name', Auth::check('auth_config_name'), $this->request);
 	if(!empty($access)) {
 		$this->redirect($access['redirect']);
 	}
@@ -46,20 +46,20 @@ This adapter effectively allows you to tell it how it should work. It comes with
 
 Then to deny all requests from the authenticated user.
 
-	$access = Access::check('rules', Auth::check('auth_config_name'), $this->request, array('rule' => 'denyAll'));
+	$access = Access::check('rules', Auth::check('auth_config_name'), $this->request, array('rules' => 'denyAll'));
 	if(!empty($access)) {
 		$this->redirect($access['redirect']);
 	}
 
 There are four built in rules; allowAll, denyAll, allowAnyUser and allowIp, for more information see the adapter itself. However, this adapter is at its most useful when you add your own rules.
 
-	Access::adapter('custom_rule')->add(function($user, $request, $options) {
+	Access::adapter('access_config_name')->add('custom_rule', function($user, $request, $options) {
 		// Your logic here. Just make sure it returns an array.
 	});
 
 Then to use your new rule:
 
-	$access = Access::check('rules', Auth::check('auth_config_name'), $this->request, array('rule' => 'custom_rule'));
+	$access = Access::check('rules', Auth::check('auth_config_name'), $this->request, array('rules' => 'custom_rule'));
 
 One more to go!
 
@@ -76,17 +76,17 @@ It's difficult to explain (I hope that's clear enough) so lets look at an exampl
 			'adapter' => 'AuthRbac',
 			'roles' => array(
 				array(
-					'resources' => '*',
+					'requesters' => '*',
 					'match' => '*::*'
 				),
 				array(
 					'message' => 'No panel for you!',
 					'redirect' => array('library' => 'admin', 'Users::login'),
-					'resources' => 'admin',
+					'requesters' => 'admin',
 					'match' => array('library' => 'admin', '*::*')
 				),
 				array(
-					'resources' => '*',
+					'requesters' => '*',
 					'match' => array(
 						'library' => 'admin', 'Users::login',
 						function($request, &$options) {
@@ -101,7 +101,7 @@ It's difficult to explain (I hope that's clear enough) so lets look at an exampl
 					}
 				),
 				array(
-					'resources' => '*',
+					'requesters' => '*',
 					'match' => array('library' => 'admin', 'Users::logout')
 				)
 			)
@@ -139,7 +139,7 @@ In the closure example configuration:
 
 Not only must the library, controller and action match but the closure must return true. So this role will only apply to this request if all of the request params match and the request data is set.
 
-`'resources'`
+`'requesters'`
 
 A string or an array of auth configuration keys that this rule applies to. The string `*` denotes everyone, even those who are not authenticated. A string of `admin` will validate anyone who can be authenticated against the user defined `admin` Auth configuration. An array of configuration keys does the same but you can apply it to multiple Auth configurations in one go.
 
@@ -166,7 +166,7 @@ Assuming we have an Auth configuration like so:
     	)
     ));
 
-Setting `'resources' => array('user', 'customer')` would only apply the rule to anyone that could authenticate as a user or customer. Setting `'resource' => '*'` would mean that all of these auth configurations and people that are not authenticated would have this role applied to them.
+Setting `'requesters' => array('user', 'customer')` would only apply the rule to anyone that could authenticate as a user or customer. Setting `'requesters' => '*'` would mean that all of these auth configurations and people that are not authenticated would have this role applied to them.
 
 `'allow'`
 
