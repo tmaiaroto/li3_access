@@ -138,11 +138,12 @@ class AuthRbacTest extends \lithium\test\Unit {
 	}
 
 	public function testCheckMessageOverride() {
-		$request = new Request(array('params' => array(
+		$request = new Request();
+		$request->params = array(
 			'library' => 'test_library',
 			'controller' => 'test_controllers',
 			'action' => 'test_action'
-		)));
+		);
 
 		$guest = array();
 		$user = array('username' => 'test');
@@ -268,9 +269,12 @@ class AuthRbacTest extends \lithium\test\Unit {
 	}
 
 	public function testClosures() {
-		$request = new Request(array('params' => array(
-			'controller' => 'test_controllers', 'action' => 'test_action'
-		)));
+		$request = new Request();
+		$request->params = array(
+			'library' => 'test_library',
+			'controller' => 'test_controllers',
+			'action' => 'test_action'
+		);
 
 		$user = $request->data = array('username' => 'test');
 		$authSuccess = array('checkSession' => false, 'success' => true);
