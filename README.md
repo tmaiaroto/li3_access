@@ -1,3 +1,5 @@
+[![Build Status](https://secure.travis-ci.org/djordje/li3_access.png?branch=master)](https://travis-ci.org/djordje/li3_access)
+
 # Access control library for the Lithium framework.
 
 ## Installation
