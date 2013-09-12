@@ -1,0 +1,30 @@
+{
+        "name": "tmaiaroto/li3_access",
+        "type": "lithium-library",
+        "description": "A simple library for user access control.",
+        "keywords": ["lithium", "access control", "li3_access"],
+        "homepage": "http://github.com/tmaiaroto/li3_access",
+        "license": "MIT License",
+        "authors": [
+                {
+                        "name": "Tom Maiaroto",
+                        "homepage": "http://www.shift8creative.com"
+                },
+                {
+                        "name": "Nate Abele",
+                        "email": "nate.abele@gmail.com",
+                        "homepage": "http://nateabele.com/"
+                },
+                {
+                        "name": "Weluse",
+                        "homepage": "http://www.weluse.de/"
+                },
+                {
+                        "name": "rich97",
+                        "homepage": "http://www.enrich.it/"
+                } 
+        ],
+        "require": {
+                "composer/installers": "*"
+        }
+}
