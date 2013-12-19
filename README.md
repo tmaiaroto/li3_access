@@ -204,7 +204,7 @@ Website: [Shift8 Creative](http://www.shift8creative.com)
 
 Wrote the original Rbac adapter.
 
-Github: [dgAlien](https://github.com/dgAlien/li3_access) [weluse](https://github.com/weluse/li3_access)
+Github: [Marc Schwering](https://github.com/m4rcsch/li3_access) [weluse](https://github.com/weluse/li3_access)
 
 Website: [Weluse](http://www.weluse.de)
 
